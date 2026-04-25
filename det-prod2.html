@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>AdminLTE 2 | Dashboard</title>
+    <!-- Tell the browser to be responsive to screen width -->
+     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <link rel="stylesheet" href="st-det-prod2.css">
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo-details">
+            <?xml version="1.0" ?><!DOCTYPE svg  PUBLIC '-//W3C//DTD SVG 1.1//EN'  'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'><svg style="enable-background:new 0 0 499.991 500.006;" version="1.1" viewBox="0 0 499.991 500.006" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="finance-hammer"><g><ellipse cx="249.998" cy="250.003" rx="249.998" ry="250.003" style="fill:#5FD4AF;"/><g id="_x31_4"><g><path d="M227.425,281.243c3.44,3.795,9.363,4.085,13.153,0.649l9.769-8.867      c3.794-3.44,4.089-9.355,0.641-13.15l-45.35-50.017c-3.44-3.795-9.359-4.081-13.154-0.641l-9.769,8.863      c-3.795,3.444-4.09,9.35-0.645,13.145L227.425,281.243z" style="fill:#FF9554;"/><path d="M312.506,204.09c3.444,3.795,9.359,4.085,13.158,0.65l9.773-8.872      c3.791-3.427,4.081-9.35,0.637-13.154l-45.35-50.012c-3.44-3.791-9.359-4.082-13.153-0.645l-9.77,8.868      c-3.795,3.44-4.085,9.363-0.645,13.158L312.506,204.09z" style="fill:#59616A;"/><path d="M370.325,308.281l-66.67-73.516c-1.722-1.897-4.684-2.043-6.577-0.32l-1.15,1.042l-9.483-10.466      l21.261-19.29l-42.649-47.034l-54.615,49.521l42.654,47.038l21.269-19.286l9.492,10.47l-1.15,1.038      c-1.902,1.722-2.043,4.679-0.321,6.581l66.675,73.512c1.714,1.897,4.675,2.047,6.572,0.325l14.367-13.034      C371.898,313.14,372.044,310.183,370.325,308.281z" style="fill:#59616A;"/><path d="M281.621,341.443H142.918c-7.979,0-14.449,6.466-14.449,14.449      c0,7.983,6.47,14.449,14.449,14.449h138.704c7.979,0,14.449-6.466,14.449-14.449C296.07,347.909,289.6,341.443,281.621,341.443z      " style="fill:#59616A;"/></g><g><polygon points="133.717,217.188 154.294,209.094 131.255,189.97 161.345,194.628 155.815,156.171       180.003,180.167 188.003,157.466 193.656,188.569 190.904,189.705 187.772,173.556 182.139,189.513 163.063,170.586       167.456,201.098 146.516,196.833 165.605,211.184 152.524,214.949 164.819,215.859 164.828,215.859 165.045,219.261     " style="fill:#FFFFFF;"/></g></g></g></g><g id="Layer_1"/></svg>     
+            <div class="logo_name" style="
+          margin: 8px 0 0 9px;" >Vente aux encheres</div>
+            <i class='bx bx-menu' id="btn" ></i>
+        </div>
+        <ul class="nav-list">
+          <li>
+              <i class='bx bx-search' ></i>
+             <input type="text" placeholder="Search...">
+             <span class="tooltip">Search</span>
+          </li>
+          <li>
+            <a href="categorie.html">
+              <i class='bx bx-grid-alt'></i>
+              <span class="links_name">Catégorie</span>
+            </a>
+             <span class="tooltip">Catégorie</span>
+          </li>
+          <li>
+           <a href="#">
+             <i class='bx bx-user' ></i>
+             <span class="links_name">User</span>
+           </a>
+           <span class="tooltip">User</span>
+         </li>
+        
+         
+        
+         <li>
+           <a href="#">
+             <i class='bx bx-cart-alt' ></i>
+             <span class="links_name">Order</span>
+           </a>
+           <span class="tooltip">Order</span>
+         </li>
+         <li>
+           <a href="#">
+             <i class='bx bx-heart' ></i>
+             <span class="links_name">Saved</span>
+           </a>
+           <span class="tooltip">Saved</span>
+         </li>
+         
+         <li class="profile">
+             <div class="profile-details">
+               <img src="profile.jpg" alt="profileImg">
+               <div class="name_job">
+                 <div class="name">Prem Shahi</div>
+                 <div class="job">Web designer</div>
+               </div>
+             </div>
+             <i class='bx bx-log-out' id="log_out" ></i>
+         </li>
+        </ul>
+      </div>
+      <div id="sepr">
+        <header>
+            <div class="home-section" style="
+                                      display:flex;
+                                      flex-basis: 125px;
+                                      color: #fff;
+                                      padding: 0 15px; 
+                                    ">
+                        <div class="text" style="color: #fff; "></div>
+                        <div class="logo-details" style="margin: 13px 0 0 9px;">
+                        <?xml version="1.0" ?><!DOCTYPE svg  PUBLIC '-//W3C//DTD SVG 1.1//EN'  'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'><svg style="enable-background:new 0 0 499.991 500.006;" version="1.1" viewBox="0 0 499.991 500.006" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="finance-hammer"><g><ellipse cx="249.998" cy="250.003" rx="249.998" ry="250.003" style="fill:#5FD4AF;"/><g id="_x31_4"><g><path d="M227.425,281.243c3.44,3.795,9.363,4.085,13.153,0.649l9.769-8.867      c3.794-3.44,4.089-9.355,0.641-13.15l-45.35-50.017c-3.44-3.795-9.359-4.081-13.154-0.641l-9.769,8.863      c-3.795,3.444-4.09,9.35-0.645,13.145L227.425,281.243z" style="fill:#FF9554;"/><path d="M312.506,204.09c3.444,3.795,9.359,4.085,13.158,0.65l9.773-8.872      c3.791-3.427,4.081-9.35,0.637-13.154l-45.35-50.012c-3.44-3.791-9.359-4.082-13.153-0.645l-9.77,8.868      c-3.795,3.44-4.085,9.363-0.645,13.158L312.506,204.09z" style="fill:#59616A;"/><path d="M370.325,308.281l-66.67-73.516c-1.722-1.897-4.684-2.043-6.577-0.32l-1.15,1.042l-9.483-10.466      l21.261-19.29l-42.649-47.034l-54.615,49.521l42.654,47.038l21.269-19.286l9.492,10.47l-1.15,1.038      c-1.902,1.722-2.043,4.679-0.321,6.581l66.675,73.512c1.714,1.897,4.675,2.047,6.572,0.325l14.367-13.034      C371.898,313.14,372.044,310.183,370.325,308.281z" style="fill:#59616A;"/><path d="M281.621,341.443H142.918c-7.979,0-14.449,6.466-14.449,14.449      c0,7.983,6.47,14.449,14.449,14.449h138.704c7.979,0,14.449-6.466,14.449-14.449C296.07,347.909,289.6,341.443,281.621,341.443z      " style="fill:#59616A;"/></g><g><polygon points="133.717,217.188 154.294,209.094 131.255,189.97 161.345,194.628 155.815,156.171       180.003,180.167 188.003,157.466 193.656,188.569 190.904,189.705 187.772,173.556 182.139,189.513 163.063,170.586       167.456,201.098 146.516,196.833 165.605,211.184 152.524,214.949 164.819,215.859 164.828,215.859 165.045,219.261     " style="fill:#FFFFFF;"/></g></g></g></g><g id="Layer_1"/></svg>     
+                        </div>
+                        <div class="logo_name" style="
+                        margin: 30px 0 0 13px;
+                            ">
+                        Vente aux encheres
+                        </div>
+    
+                        <div class="search-box" style="place-items: flex-start;">
+                        <input type="text" class="reche" placeholder="Type to search..">
+                        <div class="search-icon">
+                        <i class="fas fa-search"></i>
+                        </div>
+                        <div class="cancel-icon">
+                        <i class="fas fa-times"></i>
+                        </div>
+                        <div class="search-data"></div>
+                        </div>
+                </div>
+          </header>
+          <section>
+            <div class="G1">
+                <h2>Immobilier</h2>
+                
+                <div class="groupe1">
+                  <a href="detprod.html" style="text-decoration: none; color: #fff;">
+                    <div class="card">
+                      <img src="img-prod/maison1.jpg" alt="Avatar" style="width:100%; cursor: pointer;">
+                      <div class="container">
+                          
+                          <p>lot de 160 PC Dell OPTIPLEX</p> 
+                          <p id="countdown-1">Fin de la vente dans</p>
+                          <span id="time-1">01j 02h 53m 46s</span>
+                          <p>800 €<br> 0 enchère passée</p>
+                      </div>
+                </div>
+                  </a>
+
+                        
+                  <a href="detprod.html" style="text-decoration: none; color: #fff;">
+                    <div class="card">
+                      <img src="img-prod/maison2.jpg" alt="Avatar" style="width:100%; cursor: pointer;">
+                      <div class="container">
+                          
+                          <p>lot de 160 PC Dell OPTIPLEX</p> 
+                          <p id="countdown-2">Fin de la vente dans</p>
+                          <span id="time-2">01j 02h 53m 46s</span>
+                          <p>800 €<br> 0 enchère passée</p>
+                      </div>
+                </div>
+                  </a>
+                        
+                  <a href="detprod.html" style="text-decoration: none; color: #fff;">
+                    <div class="card">
+                      <img src="img-prod/maison3.jpg" alt="Avatar" style="width:100%; cursor: pointer;">
+                      <div class="container">
+                          
+                          <p>lot de 160 PC Dell OPTIPLEX</p> 
+                          <p id="countdown-3">Fin de la vente dans</p>
+                          <span id="time-3">01j 02h 53m 46s</span>
+                          <p>800 €<br> 0 enchère passée</p>
+                      </div>
+                </div>
+                  </a>
+                </div>
+                <div class="groupe2">
+                  <a href="detprod.html" style="text-decoration: none; color: #fff;">
+                    <div class="card">
+                      <img src="img-prod/maison4.jpg" alt="Avatar" style="width:100%; cursor: pointer;">
+                      <div class="container">
+                          
+                          <p>lot de 160 PC Dell OPTIPLEX</p> 
+                          <p id="countdown-4">Fin de la vente dans</p>
+                          <span id="time-4">01j 02h 53m 46s</span>
+                          <p>800 €<br> 0 enchère passée</p>
+                      </div>
+                </div>
+                  </a>
+                    
+                  <a href="detprod.html" style="text-decoration: none; color: #fff;">
+                    <div class="card">
+                      <img src="img-prod/maison5.jpg" alt="Avatar" style="width:100%; cursor: pointer;">
+                      <div class="container">
+                          
+                          <p>lot de 160 PC Dell OPTIPLEX</p> 
+                          <p id="countdown-5">Fin de la vente dans</p>
+                          <span id="time-5">01j 02h 53m 46s</span>
+                          <p>800 €<br> 0 enchère passée</p>
+                      </div>
+                </div>
+                  </a>
+                    
+                  <a href="detprod.html" style="text-decoration: none; color: #fff;">
+                    <div class="card">
+                      <img src="img-prod/maison6.jpg" alt="Avatar" style="width:100%; cursor: pointer;">
+                      <div class="container">
+                          
+                          <p>lot de 160 PC Dell OPTIPLEX</p> 
+                          <p id="countdown-6">Fin de la vente dans</p>
+                          <span id="time-6">01j 02h 53m 46s</span>
+                          <p>800 €<br> 0 enchère passée</p>
+                      </div>
+                </div>
+                  </a>
+            </div>
+            <div class="groupe3">
+              <a href="detprod.html" style="text-decoration: none; color: #fff;">
+                <div class="card">
+                  <img src="img-prod/maison7.jpg" alt="Avatar" style="width:100%; cursor: pointer;">
+                  <div class="container">
+                      
+                      <p>lot de 160 PC Dell OPTIPLEX</p> 
+                      <p id="countdown-7">Fin de la vente dans</p>
+                      <span id="time-7">01j 02h 53m 46s</span>
+                      <p>800 €<br> 0 enchère passée</p>
+                  </div>
+            </div>
+              </a>
+                
+              <a href="detprod.html" style="text-decoration: none; color: #fff;">
+                <div class="card">
+                  <img src="img-prod/maison8.jpg" alt="Avatar" style="width:100%; cursor: pointer;">
+                  <div class="container">
+                      
+                      <p>lot de 160 PC Dell OPTIPLEX</p> 
+                      <p id="countdown-8">Fin de la vente dans</p>
+                      <span id="time-8">01j 02h 53m 46s</span>
+                      <p>800 €<br> 0 enchère passée</p>
+                  </div>
+            </div>
+              </a>
+                
+              <a href="detprod.html" style="text-decoration: none; color: #fff;">
+                <div class="card">
+                  <img src="img-prod/maison7.jpg" alt="Avatar" style="width:100%; cursor: pointer;">
+                  <div class="container">
+                      
+                      <p>lot de 160 PC Dell OPTIPLEX</p> 
+                      <p id="countdown-1">Fin de la vente dans</p>
+                      <span id="time-1">01j 02h 53m 46s</span>
+                      <p>800 €<br> 0 enchère passée</p>
+                  </div>
+            </div>
+              </a>
+                </div>
+                <div class="pagination">
+                    <button class="button" id="startBtn" disabled>
+                      <i class="fa-solid fa-angles-left"></i>
+                    </button>
+                    <button class="button prevNext" id="prev" disabled>
+                      <i class="fa-solid fa-angle-left"></i>
+                    </button>
+              
+                    <div class="links">
+                      <a href="det-prod.html" class="link active">1</a>
+                      <a href="det-prod1.html" class="link">2</a>
+                      <a href="det-prod2.html" class="link">3</a>
+                      
+                    </div>
+              
+                    <button class="button prevNext" id="next">
+                      <i class="fa-solid fa-angle-right"></i>
+                    </button>
+                    <button class="button" id="endBtn">
+                      <i class="fa-solid fa-angles-right"></i>
+                    </button>
+                  </div>
+            </div>
+          </section>
+          
+    
+          <section>
+            <footer>
+                <div class="row1">
+                    <div class="co1">
+                        <div class="logo1">
+                            <?xml version="1.0" ?><!DOCTYPE svg  PUBLIC '-//W3C//DTD SVG 1.1//EN'  'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'><svg style="enable-background:new 0 0 499.991 500.006;" version="1.1" viewBox="0 0 499.991 500.006" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="finance-hammer"><g><ellipse cx="249.998" cy="250.003" rx="249.998" ry="250.003" style="fill:#5FD4AF;"/><g id="_x31_4"><g><path d="M227.425,281.243c3.44,3.795,9.363,4.085,13.153,0.649l9.769-8.867      c3.794-3.44,4.089-9.355,0.641-13.15l-45.35-50.017c-3.44-3.795-9.359-4.081-13.154-0.641l-9.769,8.863      c-3.795,3.444-4.09,9.35-0.645,13.145L227.425,281.243z" style="fill:#FF9554;"/><path d="M312.506,204.09c3.444,3.795,9.359,4.085,13.158,0.65l9.773-8.872      c3.791-3.427,4.081-9.35,0.637-13.154l-45.35-50.012c-3.44-3.791-9.359-4.082-13.153-0.645l-9.77,8.868      c-3.795,3.44-4.085,9.363-0.645,13.158L312.506,204.09z" style="fill:#59616A;"/><path d="M370.325,308.281l-66.67-73.516c-1.722-1.897-4.684-2.043-6.577-0.32l-1.15,1.042l-9.483-10.466      l21.261-19.29l-42.649-47.034l-54.615,49.521l42.654,47.038l21.269-19.286l9.492,10.47l-1.15,1.038      c-1.902,1.722-2.043,4.679-0.321,6.581l66.675,73.512c1.714,1.897,4.675,2.047,6.572,0.325l14.367-13.034      C371.898,313.14,372.044,310.183,370.325,308.281z" style="fill:#59616A;"/><path d="M281.621,341.443H142.918c-7.979,0-14.449,6.466-14.449,14.449      c0,7.983,6.47,14.449,14.449,14.449h138.704c7.979,0,14.449-6.466,14.449-14.449C296.07,347.909,289.6,341.443,281.621,341.443z      " style="fill:#59616A;"/></g><g><polygon points="133.717,217.188 154.294,209.094 131.255,189.97 161.345,194.628 155.815,156.171       180.003,180.167 188.003,157.466 193.656,188.569 190.904,189.705 187.772,173.556 182.139,189.513 163.063,170.586       167.456,201.098 146.516,196.833 165.605,211.184 152.524,214.949 164.819,215.859 164.828,215.859 165.045,219.261     " style="fill:#FFFFFF;"/></g></g></g></g><g id="Layer_1"/></svg>     
+                    </div>
+                        <p>Lorem ipsum dolor sit amet  Minus voluptate ratione aut provident autem.</p>
+                    </div>
+                    <div class="co1">
+                        <h3>Office <div class="underline"><span></span></div></h3>
+                        <p>ITPL Road</p>
+                        <p>Whitefield, Bangalore</p>
+                        <p>Karnataka, PIN 560066, India</p>
+                        <p class="email-id">harumidoria45@gmail.com</p>
+                        <p>+262 -325712775</p>
+                    </div>
+                    <div class="co1">
+                        <h3>Links<div class="underline"><span></span></div></h3>
+                        <ul>
+                            <li><a href="">Home</a></li>
+                            <li><a href="">Service</a></li>
+                            <li><a href="">About us </a></li>
+                            <li><a href="">Feature</a></li>
+                            <li><a href="">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div class="co1">
+                        <h3>Newsletter<div class="underline"><span></span></div></h3>
+                        <form action="">
+                            <i class='bx bxs-envelope'></i>
+                            <input type="email" placeholder="Enter your email" required>
+                            <button type="submit"><i class='bx bx-right-arrow-alt' ></i></button>
+                        </form>
+                        <div class="social-icons">
+                            <i class='bx bxl-facebook-circle'></i>
+                            <i class='bx bxl-twitter' ></i>
+                            <i class='bx bxl-whatsapp' ></i>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+            </footer>
+          </section>
+      </div>
+
+            
+      </div>
+      <script>
+        // Selecting DOM elements
+const startBtn = document.querySelector("#startBtn"),
+  endBtn = document.querySelector("#endBtn"),
+  prevNext = document.querySelectorAll(".prevNext"),
+  numbers = document.querySelectorAll(".link");
+
+// Setting an initial step
+let currentStep = 0;
+
+// Function to update the button states
+const updateBtn = () => {
+  // If we are at the last step
+  if (currentStep === 4) {
+    endBtn.disabled = true;
+    prevNext[1].disabled = true;
+  } else if (currentStep === 0) {
+    // If we are at the first step
+    startBtn.disabled = true;
+    prevNext[0].disabled = true;
+  } else {
+    endBtn.disabled = false;
+    prevNext[1].disabled = false;
+    startBtn.disabled = false;
+    prevNext[0].disabled = false;
+  }
+};
+
+// Add event listeners to the number links
+numbers.forEach((number, numIndex) => {
+  number.addEventListener("click", (e) => {
+    e.preventDefault();
+    // Set the current step to the clicked number link
+    currentStep = numIndex;
+    // Remove the "active" class from the previously active number link
+    document.querySelector(".active").classList.remove("active");
+    // Add the "active" class to the clicked number link
+    number.classList.add("active");
+    updateBtn(); // Update the button states
+  });
+});
+
+// Add event listeners to the "Previous" and "Next" buttons
+prevNext.forEach((button) => {
+  button.addEventListener("click", (e) => {
+    // Increment or decrement the current step based on the button clicked
+    currentStep += e.target.id === "next" ? 1 : -1;
+    numbers.forEach((number, numIndex) => {
+      // Toggle the "active" class on the number links based on the current step
+      number.classList.toggle("active", numIndex === currentStep);
+      updateBtn(); // Update the button states
+    });
+  });
+});
+
+// Add event listener to the "Start" button
+startBtn.addEventListener("click", () => {
+  // Remove the "active" class from the previously active number link
+  document.querySelector(".active").classList.remove("active");
+  // Add the "active" class to the first number link
+  numbers[0].classList.add("active");
+  currentStep = 0;
+  updateBtn(); // Update the button states
+  endBtn.disabled = false;
+  prevNext[1].disabled = false;
+});
+
+// Add event listener to the "End" button
+endBtn.addEventListener("click", () => {
+  // Remove the "active" class from the previously active number link
+  document.querySelector(".active").classList.remove("active");
+  // Add the "active" class to the last number link
+  numbers[4].classList.add("active");
+  currentStep = 4;
+  updateBtn(); // Update the button states
+  startBtn.disabled = false;
+  prevNext[0].disabled = false;
+});
+
+      </script>
+  <script>
+    // Set the end dates for each auction
+
+const endDate4 = new Date('2024-11-01T02:53:46.000Z');
+const endDate5 = new Date('2024-10-01T02:53:46.000Z');
+const endDate6 = new Date('2024-10-02T04:53:46.000Z');
+
+// Update the countdown timers every second
+setInterval(() => {
+  const now = new Date();
+
+  const timeDiff7 = endDate4 - now;
+  const timeDiff8 = endDate5 - now;
+  const timeDiff9 = endDate6 - now;
+
+
+
+  const days7 = Math.floor(timeDiff7 / (1000 * 60 * 60 * 24));
+  const hours7 = Math.floor((timeDiff7 % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes7 = Math.floor((timeDiff7 % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds7 = Math.floor((timeDiff7 % (1000 * 60)) / 1000);
+  
+  const days8 = Math.floor(timeDiff8 / (1000 * 60 * 60 * 24));
+  const hours8 = Math.floor((timeDiff8 % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes8 = Math.floor((timeDiff8 % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds8 = Math.floor((timeDiff8 % (1000 * 60)) / 1000);
+
+  const days9 = Math.floor(timeDiff9 / (1000 * 60 * 60 * 24));
+  const hours9 = Math.floor((timeDiff9 % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes9 = Math.floor((timeDiff9 % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds9 = Math.floor((timeDiff9 % (1000 * 60)) / 1000);
+
+
+
+  document.getElementById('time-7').innerHTML = `${days7}j ${hours7}h ${minutes7}m ${seconds7}s`;
+  document.getElementById('time-8').innerHTML = `${days8}j ${hours8}h ${minutes8}m ${seconds8}s`;
+  document.getElementById('time-9').innerHTML = `${days9}j ${hours9}h ${minutes9}m ${seconds9}s`;
+}, 1000);
+  </script>
+  <script>
+    let sidebar = document.querySelector(".sidebar");
+    let closeBtn = document.querySelector("#btn");
+    let searchBtn = document.querySelector(".bx-search");
+  
+    closeBtn.addEventListener("click", ()=>{
+      sidebar.classList.toggle("open");
+      menuBtnChange();//calling the function(optional)<font></font>
+    });
+  
+    searchBtn.addEventListener("click", ()=>{ // Sidebar open when you click on the search iocn<font></font>
+      sidebar.classList.toggle("open");
+      menuBtnChange(); //calling the function(optional)<font></font>
+    });
+  
+    // following are the code to change sidebar button(optional)<font></font>
+    function menuBtnChange() {
+     if(sidebar.classList.contains("open")){
+       closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");//replacing the iocns class<font></font>
+     }else {
+       closeBtn.classList.replace("bx-menu-alt-right","bx-menu");//replacing the iocns class<font></font>
+     }
+    }
+    </script>
+  <script>
+    const searchBox = document.querySelector(".search-box");
+    const searchBt = document.querySelector(".search-icon");
+    const cancelBtn = document.querySelector(".cancel-icon");
+    const searchInput = document.querySelector(".reche");
+    const searchData = document.querySelector(".search-data");
+    searchBt.onclick =()=>{
+      searchBox.classList.add("active");
+      searchBt.classList.add("active");
+      searchInput.classList.add("active");
+      cancelBtn.classList.add("active");
+      searchInput.focus();
+      if(searchInput.value != ""){
+        var values = searchInput.value;
+        searchData.classList.remove("active");
+        searchData.innerHTML = "You just typed " + "<span style='font-weight: 500;'>" + values + "</span>";
+      }else{
+        searchData.textContent = "";
+      }
+    }
+    cancelBtn.onclick =()=>{
+      searchBox.classList.remove("active");
+      searchBt.classList.remove("active");
+      searchInput.classList.remove("active");
+      cancelBtn.classList.remove("active");
+      searchData.classList.toggle("active");
+      searchInput.value = "";
+    }
+  </script>
+</body>
+</html>
