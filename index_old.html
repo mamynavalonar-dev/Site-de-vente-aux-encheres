@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<!-- Created by CodingLab |www.youtube.com/CodingLabYT-->
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8">
+    <title> Responsive Sidebar Menu  | CodingLab </title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Boxicons CDN Link -->
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   </head>
+<body>
+  <div class="sidebar">
+    <div class="logo-details">
+        <?xml version="1.0" ?><!DOCTYPE svg  PUBLIC '-//W3C//DTD SVG 1.1//EN'  'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'><svg style="enable-background:new 0 0 499.991 500.006;" version="1.1" viewBox="0 0 499.991 500.006" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="finance-hammer"><g><ellipse cx="249.998" cy="250.003" rx="249.998" ry="250.003" style="fill:#5FD4AF;"/><g id="_x31_4"><g><path d="M227.425,281.243c3.44,3.795,9.363,4.085,13.153,0.649l9.769-8.867      c3.794-3.44,4.089-9.355,0.641-13.15l-45.35-50.017c-3.44-3.795-9.359-4.081-13.154-0.641l-9.769,8.863      c-3.795,3.444-4.09,9.35-0.645,13.145L227.425,281.243z" style="fill:#FF9554;"/><path d="M312.506,204.09c3.444,3.795,9.359,4.085,13.158,0.65l9.773-8.872      c3.791-3.427,4.081-9.35,0.637-13.154l-45.35-50.012c-3.44-3.791-9.359-4.082-13.153-0.645l-9.77,8.868      c-3.795,3.44-4.085,9.363-0.645,13.158L312.506,204.09z" style="fill:#59616A;"/><path d="M370.325,308.281l-66.67-73.516c-1.722-1.897-4.684-2.043-6.577-0.32l-1.15,1.042l-9.483-10.466      l21.261-19.29l-42.649-47.034l-54.615,49.521l42.654,47.038l21.269-19.286l9.492,10.47l-1.15,1.038      c-1.902,1.722-2.043,4.679-0.321,6.581l66.675,73.512c1.714,1.897,4.675,2.047,6.572,0.325l14.367-13.034      C371.898,313.14,372.044,310.183,370.325,308.281z" style="fill:#59616A;"/><path d="M281.621,341.443H142.918c-7.979,0-14.449,6.466-14.449,14.449      c0,7.983,6.47,14.449,14.449,14.449h138.704c7.979,0,14.449-6.466,14.449-14.449C296.07,347.909,289.6,341.443,281.621,341.443z      " style="fill:#59616A;"/></g><g><polygon points="133.717,217.188 154.294,209.094 131.255,189.97 161.345,194.628 155.815,156.171       180.003,180.167 188.003,157.466 193.656,188.569 190.904,189.705 187.772,173.556 182.139,189.513 163.063,170.586       167.456,201.098 146.516,196.833 165.605,211.184 152.524,214.949 164.819,215.859 164.828,215.859 165.045,219.261     " style="fill:#FFFFFF;"/></g></g></g></g><g id="Layer_1"/></svg>     
+        <div class="logo_name" style="
+      margin: 8px 0 0 9px;" >Vente aux encheres</div>
+        <i class='bx bx-menu' id="btn" ></i>
+    </div>
+    <ul class="nav-list">
+      <li>
+          <i class='bx bx-search' ></i>
+         <input type="text" placeholder="Search...">
+         <span class="tooltip">Search</span>
+      </li>
+      <li>
+        <a href="categorie.html">
+          <i class='bx bx-grid-alt'></i>
+          <span class="links_name">Catégorie</span>
+        </a>
+         <span class="tooltip">Catégorie</span>
+      </li>
+      <li>
+       <a href="#">
+         <i class='bx bx-user' ></i>
+         <span class="links_name">User</span>
+       </a>
+       <span class="tooltip">User</span>
+     </li>
+    
+     
+    
+     <li>
+       <a href="#">
+         <i class='bx bx-cart-alt' ></i>
+         <span class="links_name">Order</span>
+       </a>
+       <span class="tooltip">Order</span>
+     </li>
+     <li>
+       <a href="#">
+         <i class='bx bx-heart' ></i>
+         <span class="links_name">Saved</span>
+       </a>
+       <span class="tooltip">Saved</span>
+     </li>
+     
+     <li class="profile">
+         <div class="profile-details">
+           <img src="profile.jpg" alt="profileImg">
+           <div class="name_job">
+             <div class="name">Prem Shahi</div>
+             <div class="job">Web designer</div>
+           </div>
+         </div>
+         <i class='bx bx-log-out' id="log_out" ></i>
+     </li>
+    </ul>
+  </div>
+
+  <div class="section-div" style="
+            display:grid;
+            grid-template-rows: 0 1fr 1fr 1fr 150px ;
+           ">
+            <div class="home-section" style="
+                                display:grid;
+                                grid-template-columns: 1fr 50px 1fr 1fr ;
+                                color: #fff;
+                                column-gap:15px;
+                                padding: 0 15px; 
+              ">
+                      <div class="text" style="color: #fff; 
+                      "></div>
+                      <div class="logo-details" style="margin: 8px 0 0 9px;">
+                              <?xml version="1.0" ?><!DOCTYPE svg  PUBLIC '-//W3C//DTD SVG 1.1//EN'  'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'><svg style="enable-background:new 0 0 499.991 500.006;" version="1.1" viewBox="0 0 499.991 500.006" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="finance-hammer"><g><ellipse cx="249.998" cy="250.003" rx="249.998" ry="250.003" style="fill:#5FD4AF;"/><g id="_x31_4"><g><path d="M227.425,281.243c3.44,3.795,9.363,4.085,13.153,0.649l9.769-8.867      c3.794-3.44,4.089-9.355,0.641-13.15l-45.35-50.017c-3.44-3.795-9.359-4.081-13.154-0.641l-9.769,8.863      c-3.795,3.444-4.09,9.35-0.645,13.145L227.425,281.243z" style="fill:#FF9554;"/><path d="M312.506,204.09c3.444,3.795,9.359,4.085,13.158,0.65l9.773-8.872      c3.791-3.427,4.081-9.35,0.637-13.154l-45.35-50.012c-3.44-3.791-9.359-4.082-13.153-0.645l-9.77,8.868      c-3.795,3.44-4.085,9.363-0.645,13.158L312.506,204.09z" style="fill:#59616A;"/><path d="M370.325,308.281l-66.67-73.516c-1.722-1.897-4.684-2.043-6.577-0.32l-1.15,1.042l-9.483-10.466      l21.261-19.29l-42.649-47.034l-54.615,49.521l42.654,47.038l21.269-19.286l9.492,10.47l-1.15,1.038      c-1.902,1.722-2.043,4.679-0.321,6.581l66.675,73.512c1.714,1.897,4.675,2.047,6.572,0.325l14.367-13.034      C371.898,313.14,372.044,310.183,370.325,308.281z" style="fill:#59616A;"/><path d="M281.621,341.443H142.918c-7.979,0-14.449,6.466-14.449,14.449      c0,7.983,6.47,14.449,14.449,14.449h138.704c7.979,0,14.449-6.466,14.449-14.449C296.07,347.909,289.6,341.443,281.621,341.443z      " style="fill:#59616A;"/></g><g><polygon points="133.717,217.188 154.294,209.094 131.255,189.97 161.345,194.628 155.815,156.171       180.003,180.167 188.003,157.466 193.656,188.569 190.904,189.705 187.772,173.556 182.139,189.513 163.063,170.586       167.456,201.098 146.516,196.833 165.605,211.184 152.524,214.949 164.819,215.859 164.828,215.859 165.045,219.261     " style="fill:#FFFFFF;"/></g></g></g></g><g id="Layer_1"/></svg>     
+                      </div>
+                      <div class="logo_name" style="
+                                    margin: 30px 0 0 13px;
+                                        ">
+                                    Vente aux encheres
+                      </div>
+                        
+                      <div class="search-box" style="place-items: flex-start;">
+                                  <input type="text" class="reche" placeholder="Type to search..">
+                                  <div class="search-icon">
+                                    <i class="fas fa-search"></i>
+                                  </div>
+                                  <div class="cancel-icon">
+                                    <i class="fas fa-times"></i>
+                                  </div>
+                                  <div class="search-data"></div>
+                      </div>
+          </div>
+  
+          <div class="div-slider" style="position: relative;">
+            <div class="slider">
+              <!-- fade css -->
+              <div class="myslide fade">
+                <div class="txt">
+                  <h1>IMAGE 1</h1>
+                  <p>Web Devoloper<br>Subscribe To My Channel For More Videos</p>
+                </div>
+                <img src="img1.jpg" style="width: 100%; height: 100%;">
+              </div>
+              
+              <div class="myslide fade">
+                <div class="txt">
+                  <h1>IMAGE 2</h1>
+                  <p>Web Devoloper<br>Subscribe To My Channel For More Videos</p>
+                </div>
+                <img src="img2.jpg" style="width: 100%; height: 100%;">
+              </div>
+              
+              <div class="myslide fade">
+                <div class="txt">
+                  <h1>IMAGE 3</h1>
+                  <p>Web Devoloper<br>Subscribe To My Channel For More Videos</p>
+                </div>
+                <img src="img3.jpg" style="width: 100%; height: 100%;">
+              </div>
+              
+              <div class="myslide fade">
+                <div class="txt">
+                  <h1>IMAGE 4</h1>
+                  <p>Web Devoloper<br>Subscribe To My Channel For More Videos</p>
+                </div>
+                <img src="img4.jpg" style="width: 100%; height: 100%;">
+              </div>
+              
+              <div class="myslide fade">
+                <div class="txt">
+                  <h1>IMAGE 5</h1>
+                  <p>Web Devoloper<br>Subscribe To My Channel For More Videos</p>
+                </div>
+                <img src="img5.jpg" style="width: 100%; height: 100%;">
+              </div>
+              <!-- /fade css -->
+              
+              <!-- onclick js -->
+              <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+              <a class="next" onclick="plusSlides(1)">&#10095;</a>
+              
+              <div class="dotsbox" style="text-align:center">
+                <span class="dot" onclick="currentSlide(1)"></span>
+                <span class="dot" onclick="currentSlide(2)"></span>
+                <span class="dot" onclick="currentSlide(3)"></span>
+                <span class="dot" onclick="currentSlide(4)"></span>
+                <span class="dot" onclick="currentSlide(5)"></span>
+              </div>
+              <!-- /onclick js -->
+            </div>
+          </div>
+           
+          <div class="bienvenue" style="
+          background: url('images/ecommerce-online-shop-euro.jpg') no-repeat center;
+          background-size: cover;
+          width: 100%;
+          height: 699px;
+          
+         ">
+            <!-- home section start -->
+                <section class="home" id="home">
+                  <div class="max-width">
+                      <div class="home-content">
+                          <div class="text-1">Bienvenue chez nous!</div>                          
+                          <div class="animated-text" id="myText">Rejoignez notre communauté d’enchérisseurs passionnés ! Inscrivez-vous dès aujourd’hui.</div>
+                                                   
+                            <a href="#">S'inscrire</a>
+                      </div>
+                  </div>
+              </section>
+          </div>
+          
+          <div class="decouvrir">
+          <div class="marquee-rtl">
+            <div> Chez nous, chaque enchère est une opportunité de trouver quelque chose d’extraordinaire.Les meilleures affaires partent vite. Enchérissez maintenant !</div>
+          </div>
+            <div class="dec-1" >
+              <div class="separation">
+                <section class="sary"
+                style="
+                background: url('image/voiture.jpg') no-repeat center;
+                background-size: cover;
+                width: 30%;
+                height: 200px;
+                margin: 16px 9px 3px 110px;
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.3);
+                transform: translateY(10px);
+                ">  
+                </section>
+                <div class="commentaire" style="
+                margin: 9px 9px 3px 110px;
+                ">
+                  <div class="comm-info">
+                    <div class="comm">Vehicules</div>
+                    <div class="comm">12700 ventes en cours</div>
+                  </div>                            
+                </div>
+              </div>
+              <div class="comm-button">
+                <a href="#">Découvrir</a>
+              </div>
+             
+            </div>
+
+            <div class="dec-1" style=" 
+            display: grid;
+            grid-template-columns: 900px 80px;
+            grid-gap: 25px;
+              align-items: center;
+            ">
+              <div class="separation"
+              
+              >
+                <section class="sary"
+                style="
+                background: url('image/voiture.jpg') no-repeat center;
+                background-size: cover;
+                width: 30%;
+                height: 200px;
+                margin: 16px 9px 3px 110px;
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.3);
+                transform: translateY(10px);
+                ">  
+                </section>
+                <div class="commentaire" style="
+                margin: 9px 9px 3px 110px;
+                ">
+                  <div class="comm-info">
+                    <div class="comm">Vehicules</div>
+                    <div class="comm">12700 ventes en cours</div>
+                  </div>                            
+                </div>
+              </div>
+              <div class="comm-button">
+                <a href="#">Découvrir</a>
+              </div>
+            </div>
+
+            <div class="dec-1" style=" 
+            display: grid;
+            grid-template-columns: 900px 80px;
+            grid-gap: 25px;
+            align-items: center;
+            ">
+              <div class="separation"
+              
+              >
+                <section class="sary"
+                style="
+                background: url('image/voiture.jpg') no-repeat center;
+                background-size: cover;
+                width: 30%;
+                height: 200px;
+                margin: 16px 9px 3px 110px;
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.3);
+                transform: translateY(10px);
+                ">  
+                </section>
+                <div class="commentaire" style="
+                margin: 9px 9px 3px 110px;
+                ">
+                  <div class="comm-info">
+                    <div class="comm">Vehicules</div>
+                    <div class="comm">12700 ventes en cours</div>
+                  </div>                            
+                </div>
+              </div>
+              <div class="comm-button">
+                <a href="#">Découvrir</a>
+              </div>
+            </div>
+          </div>
+
+          
+  </div>
+  
+  <script src="jsfile.js"></script>
+  <script>
+      var countDownDate = new Date("Jul 30, 2024 00:00:00").getTime();
+        var x = setInterval(function(){
+            var now = new Date().getTime();
+            var distance = countDownDate - now;
+            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            var hours = Math.floor((distance % (1000 * 60 * 60 *24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("days").innerHTML = days;
+            document.getElementById("hours").innerHTML = hours;
+            document.getElementById("minutes").innerHTML = minutes;
+            document.getElementById("seconds").innerHTML = seconds;
+           
+        },1000)
+  </script>
+  <script>
+    var countDownDate = new Date("Jul 30, 2024 00:00:00").getTime();
+      var x = setInterval(function(){
+          var now = new Date().getTime();
+          var distance = countDownDate - now;
+          var days1 = Math.floor(distance / (1000 * 60 * 60 * 24));
+          var hours1 = Math.floor((distance % (1000 * 60 * 60 *24)) / (1000 * 60 * 60));
+          var minutes1 = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+          var seconds1 = Math.floor((distance % (1000 * 60)) / 1000);
+
+          document.getElementById("days1").innerHTML = days1;
+          document.getElementById("hours1").innerHTML = hours1;
+          document.getElementById("minutes1").innerHTML = minutes1;
+          document.getElementById("seconds1").innerHTML = seconds1;
+         
+      },1000)
+</script>
+<script>
+  var countDownDate = new Date("Jul 30, 2024 00:00:00").getTime();
+    var x = setInterval(function(){
+        var now = new Date().getTime();
+        var distance = countDownDate - now;
+        var days2 = Math.floor(distance / (1000 * 60 * 60 * 24));
+        var hours2 = Math.floor((distance % (1000 * 60 * 60 *24)) / (1000 * 60 * 60));
+        var minutes2 = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds2 = Math.floor((distance % (1000 * 60)) / 1000);
+
+        document.getElementById("days2").innerHTML = days2;
+        document.getElementById("hours2").innerHTML = hours2;
+        document.getElementById("minutes2").innerHTML = minutes2;
+        document.getElementById("seconds2").innerHTML = seconds2;
+       
+    },1000)
+</script>
+<script>
+  var countDownDate = new Date("Jul 30, 2024 00:00:00").getTime();
+    var x = setInterval(function(){
+        var now = new Date().getTime();
+        var dista = countDownDate - now;
+        var day3 = Math.floor(dista / (1000 * 60 * 60 * 24));
+        var hour3 = Math.floor((dista % (1000 * 60 * 60 *24)) / (1000 * 60 * 60));
+        var minute3 = Math.floor((dista % (1000 * 60 * 60)) / (1000 * 60));
+        var second3 = Math.floor((dista % (1000 * 60)) / 1000);
+
+        document.getElementById("day3").innerHTML = days3;
+        document.getElementById("hour3").innerHTML = hours3;
+        document.getElementById("minute3").innerHTML = minutes3;
+        document.getElementById("second3").innerHTML = seconds3;
+       
+    },1000)
+</script>
+<script>
+  var countDownDate = new Date("Jul 30, 2024 00:00:00").getTime();
+    var x = setInterval(function(){
+        var now = new Date().getTime();
+        var distan = countDownDate - now;
+        var day4 = Math.floor(distan / (1000 * 60 * 60 * 24));
+        var hour4 = Math.floor((distan % (1000 * 60 * 60 *24)) / (1000 * 60 * 60));
+        var minute4 = Math.floor((distan % (1000 * 60 * 60)) / (1000 * 60));
+        var second4 = Math.floor((distan % (1000 * 60)) / 1000);
+
+        document.getElementById("day4").innerHTML = day4;
+        document.getElementById("hour4").innerHTML = hour4;
+        document.getElementById("minute4").innerHTML = minute4;
+        document.getElementById("second4").innerHTML = second4;
+       
+    },1000)
+</script>
+<script>
+  var countDownDate = new Date("Jul 30, 2024 00:00:00").getTime();
+    var x = setInterval(function(){
+        var now = new Date().getTime();
+        var distanc = countDownDate - now;
+        var jout = Math.floor(distanc / (1000 * 60 * 60 * 24));
+        var heure = Math.floor((distanc % (1000 * 60 * 60 *24)) / (1000 * 60 * 60));
+        var minut = Math.floor((distanc % (1000 * 60 * 60)) / (1000 * 60));
+        var second = Math.floor((distanc % (1000 * 60)) / 1000);
+
+        document.getElementById("jout").innerHTML = jout;
+        document.getElementById("heure").innerHTML = heure;
+        document.getElementById("minut").innerHTML = minut;
+        document.getElementById("second").innerHTML = second;
+       
+    },1000)
+</script>
+  <script>
+    // Animation du texte
+    const textElement = document.getElementById('myText');
+        const text = textElement.innerText;
+        const delay = 100; // Délai entre chaque lettre (en millisecondes)
+
+        let i = 0;
+        function animateText() {
+            if (i < text.length) {
+                textElement.innerText = text.substr(0, i + 1);
+                i++;
+                setTimeout(animateText, delay);
+            } else {
+                // Réinitialise l'animation
+                i = 0;
+                setTimeout(animateText, delay);
+            }
+        }
+
+        // Lancer l'animation au chargement de la page
+        animateText();
+  </script>
+
+  <script>
+    const myslide = document.querySelectorAll('.myslide'),
+	  dot = document.querySelectorAll('.dot');
+let counter = 1;
+slidefun(counter);
+
+let timer = setInterval(autoSlide, 8000);
+function autoSlide() {
+	counter += 1;
+	slidefun(counter);
+}
+function plusSlides(n) {
+	counter += n;
+	slidefun(counter);
+	resetTimer();
+}
+function currentSlide(n) {
+	counter = n;
+	slidefun(counter);
+	resetTimer();
+}
+function resetTimer() {
+	clearInterval(timer);
+	timer = setInterval(autoSlide, 8000);
+}
+
+function slidefun(n) {
+	
+	let i;
+	for(i = 0;i<myslide.length;i++){
+		myslide[i].style.display = "none";
+	}
+	for(i = 0;i<dot.length;i++) {
+		dot[i].className = dot[i].className.replace(' active', '');
+	}
+	if(n > myslide.length){
+	   counter = 1;
+	   }
+	if(n < 1){
+	   counter = myslide.length;
+	   }
+	myslide[counter - 1].style.display = "block";
+	dot[counter - 1].className += " active";
+}
+  </script>
+  <script>
+  let sidebar = document.querySelector(".sidebar");
+  let closeBtn = document.querySelector("#btn");
+  let searchBtn = document.querySelector(".bx-search");
+
+  closeBtn.addEventListener("click", ()=>{
+    sidebar.classList.toggle("open");
+    menuBtnChange();//calling the function(optional)<font></font>
+  });
+
+  searchBtn.addEventListener("click", ()=>{ // Sidebar open when you click on the search iocn<font></font>
+    sidebar.classList.toggle("open");
+    menuBtnChange(); //calling the function(optional)<font></font>
+  });
+
+  // following are the code to change sidebar button(optional)<font></font>
+  function menuBtnChange() {
+   if(sidebar.classList.contains("open")){
+     closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");//replacing the iocns class<font></font>
+   }else {
+     closeBtn.classList.replace("bx-menu-alt-right","bx-menu");//replacing the iocns class<font></font>
+   }
+  }
+  </script>
+
+<script>
+  const searchBox = document.querySelector(".search-box");
+  const searchBt = document.querySelector(".search-icon");
+  const cancelBtn = document.querySelector(".cancel-icon");
+  const searchInput = document.querySelector(".reche");
+  const searchData = document.querySelector(".search-data");
+  searchBt.onclick =()=>{
+    searchBox.classList.add("active");
+    searchBt.classList.add("active");
+    searchInput.classList.add("active");
+    cancelBtn.classList.add("active");
+    searchInput.focus();
+    if(searchInput.value != ""){
+      var values = searchInput.value;
+      searchData.classList.remove("active");
+      searchData.innerHTML = "You just typed " + "<span style='font-weight: 500;'>" + values + "</span>";
+    }else{
+      searchData.textContent = "";
+    }
+  }
+  cancelBtn.onclick =()=>{
+    searchBox.classList.remove("active");
+    searchBt.classList.remove("active");
+    searchInput.classList.remove("active");
+    cancelBtn.classList.remove("active");
+    searchData.classList.toggle("active");
+    searchInput.value = "";
+  }
+</script>
+</body>
+</html>
