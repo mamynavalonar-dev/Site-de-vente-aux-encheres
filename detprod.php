@@ -2,13 +2,18 @@
 require_once 'config.php';
 require_once 'cron_terminer_encheres.php';
 
+if (isset($_SESSION['user_id']) &&
+    (!isset($_SESSION['csrf_enchere']) || !is_string($_SESSION['csrf_enchere']) || strlen($_SESSION['csrf_enchere']) !== 64)) {
+    $_SESSION['csrf_enchere'] = bin2hex(random_bytes(32));
+}
+
 // Sécurité de l'ID
 if(!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     header('Location: index.php');
     exit;
 }
 
- $req = $pdo->prepare("SELECT p.*, c.nom as categorie_nom FROM produits p LEFT JOIN categories c ON p.categorie_id = c.id WHERE p.id = ?");
+ $req = $pdo->prepare("SELECT p.*, c.nom as categorie_nom, TIMESTAMPDIFF(SECOND, NOW(), p.date_fin) AS secondes_restantes FROM produits p LEFT JOIN categories c ON p.categorie_id = c.id WHERE p.id = ?");
  $req->execute([$_GET['id']]);
  $produit = $req->fetch();
  // Récupération de l'historique des enchères pour ce produit (Jointure pour avoir le nom de l'utilisateur)
@@ -17,7 +22,8 @@ if(!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     FROM encheres e 
     JOIN utilisateurs u ON e.utilisateur_id = u.id 
     WHERE e.produit_id = ? 
-    ORDER BY e.date_enchere DESC
+    ORDER BY e.date_enchere DESC, e.montant DESC, e.utilisateur_id DESC
+    LIMIT 50
 ");
  $hist_req->execute([$_GET['id']]);
  $historique = $hist_req->fetchAll();
@@ -85,6 +91,9 @@ if(!$produit) {
         .bid-form input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
         .bid-form button { padding: 12px 25px; background: crimson; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .bid-form button:hover { background: darkred; }
+        .bid-form button:disabled { opacity: 0.65; cursor: wait; }
+        .bid-form[hidden], .closed-message[hidden] { display: none; }
+        .closed-message { padding: 10px; background: #f8d7da; color: #721c24; border-radius: 4px; text-align: center; }
         
         #bid-message { margin-top: 15px; font-size: 14px; font-weight: 500; text-align: center; padding: 10px; border-radius: 4px; }
         .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
@@ -101,6 +110,7 @@ if(!$produit) {
         .history-box .bid-amount { font-weight: bold; color: crimson; margin: 0 15px; }
         .history-box .bid-date { color: #888; font-size: 12px; }
         .history-box li.empty { justify-content: center; color: #888; font-style: italic; border: none; padding: 20px 0; }
+        .history-feedback { margin-top: 10px; color: #856404; font-size: 12px; }
 
         /* Animation quand une nouvelle enchère apparaît */
         @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -258,18 +268,36 @@ if(!$produit) {
                     <?php if($produit['statut'] === 'en_cours' && isset($_SESSION['user_id'])): ?>
                         <form class="bid-form" id="bid-form">
                             <input type="hidden" id="produit_id" value="<?= $produit['id'] ?>">
-                            <input type="number" id="montant" placeholder="Votre offre..." step="0.01" required>
+                            <input type="hidden" id="csrf-enchere" value="<?= htmlspecialchars($_SESSION['csrf_enchere'], ENT_QUOTES, 'UTF-8') ?>">
+                            <input type="number" id="montant" aria-label="Montant de votre offre" placeholder="Votre offre..." min="0.01" step="0.01" required>
                             <button type="submit">Enchérir</button>
                         </form>
-                    <?php elseif($produit['statut'] === 'terminee'): ?>
-                        <div style="text-align:center; padding:10px; background:#f8d7da; color:#721c24; border-radius:4px;">
-                            Cette enchère est terminée. Les offres ne sont plus acceptées.
-                        </div>
-                    <?php else: ?>
+                    <?php elseif($produit['statut'] !== 'terminee'): ?>
                         <a href="login.php" class="warning">Connectez-vous pour participer aux enchères.</a>
                     <?php endif; ?>
+                    <div id="auction-closed-message" class="closed-message" role="status" <?= $produit['statut'] === 'terminee' ? '' : 'hidden' ?>>
+                        Cette enchère est terminée. Les offres ne sont plus acceptées.
+                    </div>
                     
-                    <div id="bid-message"></div>
+                    <div id="bid-message" role="status" aria-live="polite"></div>
+                </div>
+
+                <div class="history-box">
+                    <h3>Historique des enchères</h3>
+                    <ul id="history-list">
+                        <?php if(!$historique): ?>
+                            <li class="empty">Aucune offre pour le moment.</li>
+                        <?php else: ?>
+                            <?php foreach($historique as $offre): ?>
+                                <li>
+                                    <span class="user-name"><?= htmlspecialchars($offre['nom'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></span>
+                                    <span class="bid-amount"><?= number_format($offre['montant'], 2, ',', ' ') ?> €</span>
+                                    <span class="bid-date"><?= date('d/m H:i', strtotime($offre['date_enchere'])) ?></span>
+                                </li>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </ul>
+                    <p id="history-feedback" class="history-feedback" role="status"></p>
                 </div>
             </div>
         </div>
@@ -300,150 +328,164 @@ if(!$produit) {
             }
         };
 
-        // 2. LE VRAI COMPTE À REBOURS
-        // On passe la date de fin de PHP à Javascript
-        const dateFin = new Date("<?= date('Y-m-d H:i:s', strtotime($produit['date_fin'])) ?>").getTime();
-
+        // L'heure de la base sert de référence, quel que soit le fuseau du navigateur.
+        const initialAuction = <?= json_encode([
+            'id' => (int) $produit['id'],
+            'closed' => $produit['statut'] === 'terminee',
+            'remainingSeconds' => max(0, (int) $produit['secondes_restantes']),
+        ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+        const form = document.getElementById('bid-form');
+        const submitButton = form?.querySelector('button[type="submit"], button');
+        const amountInput = document.getElementById('montant');
+        const messageDiv = document.getElementById('bid-message');
+        const priceSpan = document.getElementById('current-price');
+        const historyList = document.getElementById('history-list');
+        const historyFeedback = document.getElementById('history-feedback');
         const timerElement = document.getElementById('countdown');
-        
-        const updateTimer = () => {
-            const maintenant = new Date().getTime();
-            const difference = dateFin - maintenant;
+        const closedMessage = document.getElementById('auction-closed-message');
+        let closed = initialAuction.closed;
+        let deadline = Date.now() + initialAuction.remainingSeconds * 1000;
+        let submitting = false;
+        let syncing = false;
+        let revision = 0;
+        let polling = null;
 
-            if (difference <= 0) {
-                timerElement.innerText = "TERMINÉE";
-                timerElement.style.color = "#ff4d4d";
-                // On cache le formulaire AJAX s'il était là (au cas où le cron n'a pas encore tourné)
-                const form = document.getElementById('bid-form');
-                if(form) form.style.display = 'none';
-                
-                const msg = document.getElementById('bid-message');
-                if(msg) {
-                    msg.className = 'error';
-                    msg.innerText = "Temps écoulé !";
+        function closeAuction() {
+            closed = true;
+            if (form) form.hidden = true;
+            if (closedMessage) closedMessage.hidden = false;
+            timerElement.textContent = 'TERMINÉE';
+            timerElement.style.color = '#ff4d4d';
+        }
+
+        function updateTimer() {
+            const remaining = Math.max(0, deadline - Date.now());
+            if (closed || remaining === 0) {
+                closeAuction();
+                return;
+            }
+            const seconds = Math.ceil(remaining / 1000);
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor(seconds % 86400 / 3600);
+            const minutes = Math.floor(seconds % 3600 / 60);
+            timerElement.textContent = String(days).padStart(2, '0') + 'j ' +
+                String(hours).padStart(2, '0') + 'h ' +
+                String(minutes).padStart(2, '0') + 'm ' +
+                String(seconds % 60).padStart(2, '0') + 's';
+        }
+
+        function showBidMessage(success, message) {
+            messageDiv.className = success ? 'success' : 'error';
+            messageDiv.textContent = message;
+        }
+
+        function renderHistory(bids) {
+            if (!historyList) return;
+            const fragment = document.createDocumentFragment();
+            if (bids.length === 0) {
+                const empty = document.createElement('li');
+                empty.className = 'empty';
+                empty.textContent = 'Aucune offre pour le moment.';
+                fragment.appendChild(empty);
+            }
+            for (const bid of bids) {
+                const row = document.createElement('li');
+                for (const [className, value] of [
+                    ['user-name', bid.nom],
+                    ['bid-amount', bid.montant + ' €'],
+                    ['bid-date', bid.date],
+                ]) {
+                    const span = document.createElement('span');
+                    span.className = className;
+                    span.textContent = value;
+                    row.appendChild(span);
                 }
-                return; 
+                fragment.appendChild(row);
+            }
+            historyList.replaceChildren(fragment);
+        }
+
+        // Les erreurs de synchronisation n'effacent jamais une confirmation d'offre.
+        async function refreshAuction() {
+            if (submitting || syncing) return;
+            syncing = true;
+            const requestedRevision = revision;
+            try {
+                const response = await fetch('get_live_data.php?id=' + initialAuction.id, { cache: 'no-store' });
+                const data = await response.json();
+                if (!response.ok || data.error || !Array.isArray(data.historique) || typeof data.prix_actuel !== 'string') {
+                    throw new Error('Réponse de synchronisation invalide.');
+                }
+                // Une lecture commencée avant l'envoi d'une offre peut être périmée.
+                if (requestedRevision !== revision) return;
+                priceSpan.textContent = data.prix_actuel + ' €';
+                renderHistory(data.historique);
+                if (historyFeedback) historyFeedback.textContent = '';
+                deadline = Date.now() + Math.max(0, Number(data.secondes_restantes)) * 1000;
+                if (data.statut === 'terminee') {
+                    closeAuction();
+                    if (polling !== null) clearInterval(polling);
+                } else {
+                    updateTimer();
+                }
+            } catch (error) {
+                if (requestedRevision === revision && historyFeedback) {
+                    historyFeedback.textContent = 'Actualisation temporairement indisponible. Les offres affichées peuvent dater.';
+                }
+            } finally {
+                syncing = false;
+            }
+        }
+
+        form?.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            if (submitting || closed) return;
+            submitting = true;
+            revision++;
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Envoi…';
             }
 
-            const jours = Math.floor(difference / (1000 * 60 * 60 * 24));
-            const heures = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-            const secondes = Math.floor((difference % (1000 * 60)) / 1000);
-
-            // Formatage joli (ex: 02j 14h 05m 32s)
-            timerElement.innerText = 
-                String(jours).padStart(2, '0') + "j " + 
-                String(heures).padStart(2, '0') + "h " + 
-                String(minutes).padStart(2, '0') + "m " + 
-                String(secondes).padStart(2, '0') + "s";
-        };
-
-        // Lancement immédiat, puis toutes les secondes
-        updateTimer();
-        setInterval(updateTimer, 1000);
-
-        // 3. LOGIQUE D'ENCHÈRE AJAX
-        document.getElementById('bid-form')?.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const montant = document.getElementById('montant').value;
-            const produitId = document.getElementById('produit_id').value;
-            const messageDiv = document.getElementById('bid-message');
-            const priceSpan = document.getElementById('current-price');
-            
-            fetch('traitement_enchere.php', {
+            let data;
+            try {
+                const response = await fetch('traitement_enchere.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'produit_id=' + produitId + '&montant=' + montant
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                    messageDiv.className = data.success ? 'success' : 'error';
-                    messageDiv.innerText = data.message;
-                    
-                    if(data.success) {
-                        priceSpan.innerText = data.nouveau_prix + ' €';
-                        document.getElementById('montant').value = '';
-                        
-                        // NOUVEAU : Ajouter l'enchère dans l'historique en temps réel
-                        const historyList = document.getElementById('history-list');
-                        
-                        // On enlève le message "Aucune enchère" s'il est là
-                        const emptyMsg = historyList.querySelector('.empty');
-                        if(emptyMsg) emptyMsg.remove();
+                    body: new URLSearchParams({
+                        produit_id: initialAuction.id,
+                        montant: amountInput.value,
+                        csrf_token: document.getElementById('csrf-enchere').value,
+                    }),
+                });
+                data = await response.json();
+                if (typeof data.success !== 'boolean' || typeof data.message !== 'string' ||
+                    (data.success && (!response.ok || typeof data.nouveau_prix !== 'string'))) {
+                    throw new Error('Réponse de confirmation invalide.');
+                }
+            } catch (error) {
+                showBidMessage(false, 'Impossible de confirmer la réponse du serveur. Actualisez la page pour vérifier votre offre avant de réessayer.');
+                return;
+            } finally {
+                submitting = false;
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Enchérir';
+                }
+            }
 
-                        // Création de la nouvelle ligne
-                        const newLi = document.createElement('li');
-                        newLi.className = 'new-bid';
-                        
-                        // On récupère le nom de l'utilisateur connecté depuis le header
-                        const userName = "<?= isset($_SESSION['user_nom']) ? htmlspecialchars($_SESSION['user_nom']) : 'Moi' ?>";
-                        
-                        // Formatage de la date actuelle
-                        const now = new Date();
-                        const timeStr = String(now.getDate()).padStart(2,'0') + '/' + String(now.getMonth()+1).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+            if (data.success) {
+                priceSpan.textContent = data.nouveau_prix + ' €';
+                amountInput.value = '';
+            }
+            showBidMessage(data.success, data.message || (data.success ? 'Enchère réussie !' : 'Offre refusée.'));
+            // La confirmation est déjà affichée ; l'historique se recharge séparément.
+            void refreshAuction();
+        });
 
-                        newLi.innerHTML = `
-                            <span class="user-name">${userName}</span>
-                            <span class="bid-amount">${data.nouveau_prix} €</span>
-                            <span class="bid-date">${timeStr}</span>
-                        `;
-                        
-                        // On l'insère en haut de la liste
-                        historyList.insertBefore(newLi, historyList.firstChild);
-                              }
-                          })
-                          .catch(() => {
-                              messageDiv.className = 'error';
-                              messageDiv.innerText = "Erreur de connexion au serveur.";
-                          });
-              });
-
-              // 4. TEMPS RÉEL (Polling toutes les 5 secondes)
-            const produitId = "<?= $_GET['id'] ?>";
-            let lastKnownPrice = document.getElementById('current-price').innerText.replace(/\s/g, '').replace('€', '');
-
-            setInterval(() => {
-                fetch(`get_live_data.php?id=${produitId}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if(data.error) return;
-
-                        // Si le statut a changé (quelqu'un a cloturé l'enchère depuis l'admin)
-                        if(data.statut === 'terminee') {
-                            location.reload(); // On recharge pour bloquer l'interface
-                            return;
-                        }
-
-                        // Si le prix en BDD est différent du prix affiché
-                        const newPrice = data.prix_actuel.replace(/\s/g, '').replace('€', '');
-                        if(newPrice !== lastKnownPrice) {
-                            // On met à jour le prix
-                            document.getElementById('current-price').innerText = data.prix_actuel + ' €';
-                            lastKnownPrice = newPrice;
-
-                            // S'il y a une nouvelle enchère d'un autre utilisateur
-                            if(data.last_bid) {
-                                const historyList = document.getElementById('history-list');
-                                const emptyMsg = historyList.querySelector('.empty');
-                                if(emptyMsg) emptyMsg.remove();
-
-                                // On vérifie si cette enchère n'est pas déjà affichée (pour éviter les doublons)
-                                const firstLi = historyList.querySelector('li');
-                                if(!firstLi || firstLi.innerText.includes(data.last_bid.nom) && firstLi.innerText.includes(data.last_bid.montant)) {
-                                    const newLi = document.createElement('li');
-                                    newLi.className = 'new-bid';
-                                    newLi.innerHTML = `
-                                        <span class="user-name">${data.last_bid.nom}</span>
-                                        <span class="bid-amount">${data.last_bid.montant} €</span>
-                                        <span class="bid-date">${data.last_bid.date}</span>
-                                    `;
-                                    historyList.insertBefore(newLi, historyList.firstChild);
-                                }
-                            }
-                        }
-                    });
-            }, 5000); // 5000 millisecondes = 5 secondes
+        updateTimer();
+        setInterval(updateTimer, 1000);
+        if (!initialAuction.closed) polling = setInterval(refreshAuction, 5000);
     </script>
 </body>
 </html>
