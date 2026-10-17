@@ -1,0 +1,47 @@
+<?php
+require_once __DIR__ . '/layout.php';
+require_once __DIR__ . '/lib/vendeurs.php';
+$user = app_require_user(false);
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    app_require_csrf(false);
+    try {
+        if (($_POST['action'] ?? '') !== 'profil') { throw new InvalidArgumentException('Action inconnue.'); }
+        $name = app_text($_POST['nom'] ?? null, 150, 'Nom public');
+        $pdo->prepare('UPDATE utilisateurs SET nom = ? WHERE id = ?')->execute([$name, $user['id']]);
+        header('Location: compte.php?onglet=profil&resultat=enregistre', true, 303); exit;
+    } catch (InvalidArgumentException $error) { app_error_page(422, $error->getMessage()); }
+    catch (Throwable $error) { error_log('Profil non confirmé : ' . $error->getMessage()); app_error_page(500, 'Impossible de confirmer la modification. Actualisez votre profil.'); }
+}
+$tab = $_GET['onglet'] ?? 'accueil';
+if (!in_array($tab, ['accueil', 'encheres', 'favoris', 'profil'], true)) { app_error_page(404, 'Cette rubrique n’existe pas.'); }
+$page = filter_var($_GET['page'] ?? 1, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 100000]]) ?: 1;
+$offset = ($page - 1) * 30;
+$query = $pdo->prepare('SELECT COUNT(DISTINCT e.produit_id) FROM encheres e JOIN produits p ON p.id = e.produit_id WHERE e.utilisateur_id = ? AND p.archive_le IS NULL');
+$query->execute([$user['id']]); $bidCount = (int) $query->fetchColumn();
+$query = $pdo->prepare('SELECT COUNT(*) FROM favoris f JOIN produits p ON p.id = f.produit_id WHERE f.utilisateur_id = ? AND p.archive_le IS NULL');
+$query->execute([$user['id']]); $favoriteCount = (int) $query->fetchColumn();
+$query = $pdo->prepare('SELECT COUNT(*) FROM produits WHERE vendeur_id = ?');
+$query->execute([$user['id']]); $listingCount = (int) $query->fetchColumn();
+$products = []; $bids = []; $next = false;
+if ($tab === 'favoris') {
+    $query = $pdo->prepare("SELECT p.*, c.nom AS categorie_nom, TIMESTAMPDIFF(SECOND,NOW(),p.date_fin) AS secondes_restantes, 1 AS favori FROM favoris f JOIN produits p ON p.id = f.produit_id JOIN categories c ON c.id = p.categorie_id WHERE f.utilisateur_id = ? AND p.archive_le IS NULL ORDER BY f.id DESC LIMIT 31 OFFSET $offset");
+    $query->execute([$user['id']]); $products = $query->fetchAll(); $next = count($products) > 30; $products = array_slice($products, 0, 30);
+} elseif ($tab === 'encheres') {
+    $query = $pdo->prepare("SELECT p.*, b.mon_offre, b.derniere_offre, TIMESTAMPDIFF(SECOND,NOW(),p.date_fin) AS secondes_restantes FROM produits p JOIN (SELECT produit_id, MAX(montant) AS mon_offre, MAX(date_enchere) AS derniere_offre FROM encheres WHERE utilisateur_id = ? GROUP BY produit_id) b ON b.produit_id = p.id WHERE p.archive_le IS NULL ORDER BY b.derniere_offre DESC, p.id DESC LIMIT 31 OFFSET $offset");
+    $query->execute([$user['id']]); $bids = $query->fetchAll(); $next = count($bids) > 30; $bids = array_slice($bids, 0, 30);
+}
+app_page_start('Mon compte acheteur', 'compte');
+?>
+<section class="account-heading"><div class="container"><p class="eyebrow">Votre espace personnel</p><h1>Bonjour, <?= app_escape($user['nom']) ?>.</h1><p>Compte acheteur<?= app_is_seller($user) ? ' · Accès vendeur actif' : '' ?> · Retrouvez vos enchères, vos favoris et vos informations.</p></div></section>
+<div class="container account-layout"><nav class="account-sidebar" aria-label="Rubriques du compte"><?php foreach (['accueil' => ['Mon compte','user'], 'encheres' => ['Mes enchères','hammer'], 'favoris' => ['Mes favoris','heart'], 'profil' => ['Mes informations','list']] as $key => $item): ?><a href="compte.php?onglet=<?= $key ?>" class="<?= $tab === $key ? 'active' : '' ?>" <?= $tab === $key ? 'aria-current="page"' : '' ?>><?= app_icon($item[1]) ?><?= $item[0] ?></a><?php endforeach; ?><a href="<?= app_is_seller($user) ? 'mes_annonces.php' : 'devenir_vendeur.php' ?>"><?= app_icon('tag') ?><?= app_is_seller($user) ? 'Espace vendeur' : 'Devenir vendeur' ?></a><?php if ($listingCount && !app_is_seller($user)): ?><a href="mes_annonces.php"><?= app_icon('list') ?>Mes anciennes annonces</a><?php endif; ?><?php if ((int) $user['is_admin'] === 1): ?><a href="admin.php"><?= app_icon('shield') ?>Administration</a><a href="admin_vendeurs.php"><?= app_icon('user') ?>Demandes vendeur</a><?php endif; ?></nav><section class="account-content" <?= $tab === 'favoris' ? 'data-favorites-page' : '' ?>><div id="global-feedback" role="status" aria-live="polite"></div>
+<?php if ($tab === 'accueil'): ?>
+<h2>Tout votre suivi, au même endroit.</h2><div class="stats-grid"><a class="stat-card" href="compte.php?onglet=encheres"><?= app_icon('hammer') ?><strong><?= $bidCount ?></strong><span><?= $bidCount > 1 ? 'lots avec vos offres' : 'lot avec vos offres' ?></span></a><a class="stat-card" href="compte.php?onglet=favoris"><?= app_icon('heart') ?><strong><?= $favoriteCount ?></strong><span><?= $favoriteCount > 1 ? 'biens favoris' : 'bien favori' ?></span></a><a class="stat-card" href="<?= $listingCount ? 'mes_annonces.php' : 'devenir_vendeur.php' ?>"><?= app_icon('tag') ?><strong><?= $listingCount ?></strong><span><?= $listingCount > 1 ? 'annonces publiées' : 'annonce publiée' ?></span></a></div><div class="panel"><h3>Une prochaine enchère en vue ?</h3><p class="muted">Parcourez les biens disponibles et ajoutez vos coups de cœur à vos favoris pour les retrouver ici.</p><a class="button button-blue" href="index.php">Explorer les ventes <?= app_icon('arrow') ?></a></div><div class="account-callout"><h3><?= app_is_seller($user) ? 'Votre espace vendeur est ouvert.' : 'Vous souhaitez aussi vendre ?' ?></h3><p><?= app_is_seller($user) ? 'Publiez vos biens et suivez les offres reçues. Vous conservez votre espace acheteur.' : 'Découvrez les formules et présentez votre projet. La publication sera disponible après validation de votre accès vendeur.' ?></p><a class="button button-outline" href="<?= app_is_seller($user) ? 'mes_annonces.php' : 'devenir_vendeur.php' ?>"><?= app_is_seller($user) ? 'Gérer mes annonces' : 'Découvrir les formules vendeur' ?> <?= app_icon('arrow') ?></a></div>
+<?php elseif ($tab === 'favoris'): ?>
+<h2>Mes favoris <small>(<?= $favoriteCount ?>)</small></h2><?php if ($products): ?><div class="product-grid view-list"><?php foreach ($products as $product) { app_product_card($product); } ?></div><?php else: ?><div class="empty-state"><?= app_icon('heart') ?><h2>Vos prochains coups de cœur sont ici.</h2><p>Ajoutez un bien à vos favoris depuis le catalogue ou sa fiche.</p><a class="button button-blue" href="index.php">Découvrir les ventes</a></div><?php endif; ?>
+<?php elseif ($tab === 'encheres'): ?>
+<h2>Mes enchères <small>(<?= $bidCount ?>)</small></h2><?php if (!$bids): ?><div class="empty-state"><?= app_icon('hammer') ?><h2>Vous n’avez pas encore déposé d’offre.</h2><p>Choisissez un lot pour participer à votre première enchère.</p><a class="button button-blue" href="index.php">Voir les ventes en cours</a></div><?php endif; ?><div class="account-list"><?php foreach ($bids as $bid): $closed = $bid['statut'] !== 'en_cours' || (int) $bid['secondes_restantes'] <= 0; $leading = (string) $bid['mon_offre'] === (string) $bid['prix_actuel']; ?><article class="account-lot"><a href="detprod.php?id=<?= (int) $bid['id'] ?>"><img src="photo.php?id=<?= (int) $bid['id'] ?>" alt="" loading="lazy"></a><div><h3><a href="detprod.php?id=<?= (int) $bid['id'] ?>"><?= app_escape($bid['nom']) ?></a></h3><p>Votre meilleure offre : <strong><?= number_format($bid['mon_offre'], 2, ',', ' ') ?> €</strong></p><p>Prix actuel : <?= number_format($bid['prix_actuel'], 2, ',', ' ') ?> €</p><span class="status-pill <?= $closed ? 'status-muted' : '' ?>"><?= $closed ? 'Vente terminée' : ($leading ? 'Vous êtes en tête' : 'Offre dépassée') ?></span></div><a class="button button-outline button-small" href="detprod.php?id=<?= (int) $bid['id'] ?>">Voir le lot</a></article><?php endforeach; ?></div>
+<?php elseif ($tab === 'profil'): ?>
+<h2>Mes informations</h2><?php if (($_GET['resultat'] ?? '') === 'enregistre') { app_notice('Votre nom public a été mis à jour.', 'success'); } ?><div class="panel"><dl class="profile-grid"><div class="profile-value"><dt>Adresse email du compte</dt><dd><?= app_escape($user['email']) ?></dd></div><div class="profile-value"><dt>Accès</dt><dd>Acheteur<?= app_is_seller($user) ? ' et vendeur' : '' ?></dd></div></dl><form method="post" action="compte.php?onglet=profil"><input type="hidden" name="csrf_token" value="<?= app_escape(app_csrf_token()) ?>"><input type="hidden" name="action" value="profil"><div class="field"><label for="public-name">Nom public</label><input name="nom" id="public-name" maxlength="150" required autocomplete="nickname" value="<?= app_escape($user['nom']) ?>"><small>Ce nom apparaît sur vos offres et sur vos annonces. Votre email reste réservé à votre compte et à l’administration.</small></div><button type="submit" class="button button-blue">Enregistrer mon nom public</button></form></div>
+<?php endif; ?>
+<?php if (in_array($tab, ['encheres', 'favoris'], true) && ($page > 1 || $next)): ?><nav class="pagination" aria-label="Pages de la rubrique"><?php if ($page > 1): ?><a href="?onglet=<?= $tab ?>&page=<?= $page - 1 ?>">Précédente</a><?php endif; ?><span>Page <?= $page ?></span><?php if ($next): ?><a href="?onglet=<?= $tab ?>&page=<?= $page + 1 ?>">Suivante</a><?php endif; ?></nav><?php endif; ?>
+</section></div><?php app_page_end(); ?>

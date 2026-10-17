@@ -14,6 +14,21 @@ if (PHP_SAPI !== 'cli') {
     header('X-Frame-Options: DENY');
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('Cache-Control: no-store');
+    try {
+        $schemaReady = (bool) $pdo->query("SELECT version FROM schema_migrations WHERE version = '20261017_acheteur_vendeur'")->fetchColumn();
+    } catch (PDOException $error) {
+        $schemaReady = false;
+    }
+    if (!$schemaReady) {
+        error_log('Mise à jour de la base nécessaire : exécuter php bin/migrate.php depuis le dossier du projet.');
+        header('Retry-After: 60');
+        $route = basename($_SERVER['SCRIPT_NAME'] ?? '');
+        if (str_starts_with($route, 'traitement_') || in_array($route, ['get_live_data.php', 'recherche.php'], true)) {
+            app_json(503, ['success' => false, 'code' => 'maintenance', 'message' => 'Le site est en cours de mise à jour. Réessayez dans quelques instants.']);
+        }
+        http_response_code(503);
+        exit('<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mise à jour en cours</title><body><h1>Mise à jour en cours</h1><p>Le site est en cours de mise à jour. Réessayez dans quelques instants.</p></body></html>');
+    }
 }
 
 if (isset($_SESSION['user_id'])) {
@@ -82,7 +97,7 @@ function app_current_user(): ?array
     if (!$id) {
         return null;
     }
-    $query = $pdo->prepare('SELECT id, nom, email, is_admin FROM utilisateurs WHERE id = ?');
+    $query = $pdo->prepare('SELECT u.id, u.nom, u.email, u.is_admin, s.status AS seller_status, s.plan_code AS seller_plan FROM utilisateurs u LEFT JOIN seller_access s ON s.user_id = u.id WHERE u.id = ?');
     $query->execute([$id]);
     $user = $query->fetch() ?: null;
     if (!$user) {
@@ -115,6 +130,34 @@ function app_logout_form(): void
         '<input type="hidden" name="action" value="logout">' .
         '<input type="hidden" name="csrf_token" value="' . app_escape(app_csrf_token()) . '">' .
         '<button type="submit" class="logout" style="border:0;background:none;cursor:pointer;font:inherit;color:crimson">Déconnexion</button></form>';
+}
+
+function app_is_seller(?array $user): bool
+{
+    return $user !== null && ($user['seller_status'] ?? null) === 'active';
+}
+
+function app_require_seller(bool $json = true): array
+{
+    $user = app_require_user($json);
+    if (app_is_seller($user)) { return $user; }
+    if ($json) {
+        app_json(403, ['success' => false, 'code' => 'seller_required', 'message' => 'Votre accès vendeur doit être validé avant de publier une annonce.', 'url' => 'devenir_vendeur.php']);
+    }
+    header('Location: devenir_vendeur.php', true, 303);
+    exit;
+}
+
+function app_lock_seller(int $id): void
+{
+    global $pdo;
+    // Même ordre de verrouillage que les demandes et les décisions administratives.
+    $query = $pdo->prepare('SELECT id FROM utilisateurs WHERE id = ? FOR UPDATE');
+    $query->execute([$id]);
+    if (!$query->fetchColumn()) { throw new DomainException('Ce compte n’est plus disponible.'); }
+    $query = $pdo->prepare('SELECT status FROM seller_access WHERE user_id = ? FOR UPDATE');
+    $query->execute([$id]);
+    if ($query->fetchColumn() !== 'active') { throw new DomainException('Votre accès vendeur ne permet plus de publier.'); }
 }
 
 function app_amount($raw): string

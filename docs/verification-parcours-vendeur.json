@@ -1,0 +1,943 @@
+{
+  "ok": true,
+  "date": "2026-10-17",
+  "base_commit": "ac47eeab2e675351f08f42c45294ead603d462bd",
+  "php": "8.3.6",
+  "mariadb": "10.11.7-MariaDB-2ubuntu2",
+  "native_http": true,
+  "mocked_responses": false,
+  "browser_automated": false,
+  "checks": [
+    {
+      "name": "Schéma initial importé dans une base de test neuve",
+      "ok": true
+    },
+    {
+      "name": "Préparation de la version précédente réellement installée",
+      "ok": true
+    },
+    {
+      "name": "Syntaxe PHP valide pour tous les fichiers exécutables",
+      "ok": true,
+      "evidence": 27
+    },
+    {
+      "name": "Syntaxe JavaScript : connexion.js",
+      "ok": true
+    },
+    {
+      "name": "Syntaxe JavaScript : creation.js",
+      "ok": true
+    },
+    {
+      "name": "Syntaxe JavaScript : enchere.js",
+      "ok": true
+    },
+    {
+      "name": "Syntaxe JavaScript : site.js",
+      "ok": true
+    },
+    {
+      "name": "Migration initiale",
+      "ok": true,
+      "evidence": "[OK] Parcours acheteur/vendeur installé ; accès des vendeurs existants conservé.\n[OK] Migration terminée. Les comptes, lots, offres, favoris et photos existants sont conservés."
+    },
+    {
+      "name": "Migration réexécutable",
+      "ok": true,
+      "evidence": "[OK] Parcours acheteur/vendeur installé ; accès des vendeurs existants conservé.\n[OK] Migration terminée. Les comptes, lots, offres, favoris et photos existants sont conservés."
+    },
+    {
+      "name": "Données initiales conservées : utilisateurs",
+      "ok": true
+    },
+    {
+      "name": "Données initiales conservées : categories",
+      "ok": true
+    },
+    {
+      "name": "Données initiales conservées : produits",
+      "ok": true
+    },
+    {
+      "name": "Données initiales conservées : encheres",
+      "ok": true
+    },
+    {
+      "name": "Données initiales conservées : favoris",
+      "ok": true
+    },
+    {
+      "name": "Aucun vendeur inventé pour les anciens lots anonymes",
+      "ok": true
+    },
+    {
+      "name": "Vendeur existant conservé sans abonnement factice",
+      "ok": true
+    },
+    {
+      "name": "Contrôle CLI de l’installation",
+      "ok": true,
+      "evidence": "[OK] PHP 8.2 ou supérieur\n[OK] Extension pdo_mysql\n[OK] Extension fileinfo\n[OK] Table InnoDB : utilisateurs\n[OK] Table InnoDB : categories\n[OK] Table InnoDB : produits\n[OK] Table InnoDB : encheres\n[OK] Table InnoDB : favoris\n[OK] Table InnoDB : auth_attempts\n[OK] Table InnoDB : schema_migrations\n[OK] Table InnoDB : seller_access\n[OK] Table InnoDB : seller_events\n[OK] Colonnes vendeur_id et archive_le\n[OK] Migration du parcours acheteur/vendeur appliquée\n[OK] Stockage des photos privé et accessible en écriture\nCe contrôle local ne remplace pas la vérification du site dans le navigateur ni celle de l’hébergement."
+    },
+    {
+      "name": "Page de connexion et jeton CSRF réels",
+      "ok": true
+    },
+    {
+      "name": "Cookies HttpOnly et SameSite Lax",
+      "ok": true
+    },
+    {
+      "name": "En-têtes nosniff, anti-cadre et no-store",
+      "ok": true
+    },
+    {
+      "name": "Authentification GET refusée",
+      "ok": true
+    },
+    {
+      "name": "Inscription sans CSRF refusée",
+      "ok": true
+    },
+    {
+      "name": "Aucun compte créé par le formulaire sans CSRF",
+      "ok": true
+    },
+    {
+      "name": "Inscription réelle : seller",
+      "ok": true
+    },
+    {
+      "name": "Rôle imposé à membre : seller",
+      "ok": true
+    },
+    {
+      "name": "Connexion réelle : seller",
+      "ok": true
+    },
+    {
+      "name": "Identifiant de session renouvelé : seller",
+      "ok": true
+    },
+    {
+      "name": "Inscription réelle : bidder",
+      "ok": true
+    },
+    {
+      "name": "Rôle imposé à membre : bidder",
+      "ok": true
+    },
+    {
+      "name": "Connexion réelle : bidder",
+      "ok": true
+    },
+    {
+      "name": "Identifiant de session renouvelé : bidder",
+      "ok": true
+    },
+    {
+      "name": "Inscription réelle : admin",
+      "ok": true
+    },
+    {
+      "name": "Rôle imposé à membre : admin",
+      "ok": true
+    },
+    {
+      "name": "Connexion réelle : admin",
+      "ok": true
+    },
+    {
+      "name": "Identifiant de session renouvelé : admin",
+      "ok": true
+    },
+    {
+      "name": "Mot de passe stocké sous forme de hachage",
+      "ok": true
+    },
+    {
+      "name": "Mot de passe trop court refusé",
+      "ok": true
+    },
+    {
+      "name": "Administration refusée au membre",
+      "ok": true
+    },
+    {
+      "name": "Outil CLI inaccessible par HTTP : migrate.php",
+      "ok": true
+    },
+    {
+      "name": "Outil CLI inaccessible par HTTP : promouvoir-admin.php",
+      "ok": true
+    },
+    {
+      "name": "Outil CLI inaccessible par HTTP : verifier-installation.php",
+      "ok": true
+    },
+    {
+      "name": "Promotion explicite d’un compte existant par CLI",
+      "ok": true
+    },
+    {
+      "name": "Rôle relu en base par une session déjà connectée",
+      "ok": true
+    },
+    {
+      "name": "Révocation du rôle immédiatement appliquée",
+      "ok": true
+    },
+    {
+      "name": "Inscription = acheteur sans accès vendeur",
+      "ok": true
+    },
+    {
+      "name": "Visiteur sans bouton vendeur dans la navigation",
+      "ok": true
+    },
+    {
+      "name": "Compte acheteur réel avec bouton Devenir vendeur",
+      "ok": true
+    },
+    {
+      "name": "Acheteur sans accès à la création HTML",
+      "ok": true
+    },
+    {
+      "name": "Acheteur sans accès à la publication directe",
+      "ok": true
+    },
+    {
+      "name": "Demande vendeur anonyme refusée",
+      "ok": true
+    },
+    {
+      "name": "Demande vendeur GET refusée",
+      "ok": true
+    },
+    {
+      "name": "Demande vendeur sans CSRF refusée",
+      "ok": true
+    },
+    {
+      "name": "Formule inconnue refusée",
+      "ok": true
+    },
+    {
+      "name": "Demande réelle enregistrée pour le compte de la session",
+      "ok": true
+    },
+    {
+      "name": "Choisir une formule ne donne pas le droit de publier",
+      "ok": true
+    },
+    {
+      "name": "Double soumission sans doublon de demande ou d’événement",
+      "ok": true
+    },
+    {
+      "name": "Demande en attente visible à son propriétaire",
+      "ok": true
+    },
+    {
+      "name": "Administration vendeur inaccessible aux acheteurs",
+      "ok": true
+    },
+    {
+      "name": "Validation sans CSRF refusée",
+      "ok": true
+    },
+    {
+      "name": "Validation par un acheteur refusée",
+      "ok": true
+    },
+    {
+      "name": "Décision administrative périmée refusée",
+      "ok": true
+    },
+    {
+      "name": "Accès activé uniquement après la validation administrateur",
+      "ok": true
+    },
+    {
+      "name": "Décision enregistrée dans le journal vendeur",
+      "ok": true
+    },
+    {
+      "name": "Ancien formulaire de validation ne peut pas rejouer la décision",
+      "ok": true
+    },
+    {
+      "name": "Session existante autorisée après validation sans reconnexion",
+      "ok": true
+    },
+    {
+      "name": "Autre acheteur toujours sans accès vendeur",
+      "ok": true
+    },
+    {
+      "name": "Création anonyme refusée",
+      "ok": true
+    },
+    {
+      "name": "Création GET refusée",
+      "ok": true
+    },
+    {
+      "name": "Création sans CSRF refusée",
+      "ok": true
+    },
+    {
+      "name": "Fichier PHP déclaré JPEG refusé",
+      "ok": true
+    },
+    {
+      "name": "Fichier de plus de 5 Mo refusé",
+      "ok": true
+    },
+    {
+      "name": "Publication refusée : catégorie inexistante",
+      "ok": true
+    },
+    {
+      "name": "Publication refusée : prix négatif",
+      "ok": true
+    },
+    {
+      "name": "Publication refusée : prix exponentiel",
+      "ok": true
+    },
+    {
+      "name": "Publication refusée : prix trop précis",
+      "ok": true
+    },
+    {
+      "name": "Publication refusée : nom trop long",
+      "ok": true
+    },
+    {
+      "name": "Publication refusée : date passée",
+      "ok": true
+    },
+    {
+      "name": "Publication refusée : date impossible",
+      "ok": true
+    },
+    {
+      "name": "Publication refusée : date avec octet nul",
+      "ok": true
+    },
+    {
+      "name": "Aucun lot ni fichier résiduel après les refus",
+      "ok": true
+    },
+    {
+      "name": "Publication réelle avec prix décimal et photo",
+      "ok": true,
+      "evidence": {
+        "status": 201,
+        "id": 3
+      }
+    },
+    {
+      "name": "Vendeur issu de la session et prix exacts",
+      "ok": true
+    },
+    {
+      "name": "Nom de fichier aléatoire et extension serveur",
+      "ok": true
+    },
+    {
+      "name": "Photo stockée hors de l’application",
+      "ok": true
+    },
+    {
+      "name": "Photo servie avec le vrai type JPEG",
+      "ok": true
+    },
+    {
+      "name": "Photo HEAD sans contenu",
+      "ok": true
+    },
+    {
+      "name": "Ancienne photo conservée et lisible",
+      "ok": true
+    },
+    {
+      "name": "Identifiant photo invalide refusé",
+      "ok": true
+    },
+    {
+      "name": "Nom du lot et nom public échappés en HTML",
+      "ok": true
+    },
+    {
+      "name": "Formulaire d’offre masqué au vendeur",
+      "ok": true
+    },
+    {
+      "name": "Mes annonces limitées au compte connecté",
+      "ok": true
+    },
+    {
+      "name": "Mes annonces inaccessible anonymement",
+      "ok": true
+    },
+    {
+      "name": "Enchère du vendeur refusée côté serveur",
+      "ok": true
+    },
+    {
+      "name": "Aucune offre ajoutée par le vendeur",
+      "ok": true
+    },
+    {
+      "name": "Offre anonyme refusée",
+      "ok": true
+    },
+    {
+      "name": "Offre sans CSRF refusée",
+      "ok": true
+    },
+    {
+      "name": "Offre d’un autre compte acceptée et historisée",
+      "ok": true
+    },
+    {
+      "name": "Prix et historique synchronisés dans le JSON réel",
+      "ok": true
+    },
+    {
+      "name": "Favori GET refusé",
+      "ok": true
+    },
+    {
+      "name": "Favori sans CSRF refusé",
+      "ok": true
+    },
+    {
+      "name": "Ajout favori idempotent 1",
+      "ok": true
+    },
+    {
+      "name": "Ajout favori idempotent 2",
+      "ok": true
+    },
+    {
+      "name": "Un seul favori enregistré malgré deux demandes",
+      "ok": true
+    },
+    {
+      "name": "Recherche réelle avec catégorie et favori",
+      "ok": true
+    },
+    {
+      "name": "Recherche sans sortie HTML injectée",
+      "ok": true
+    },
+    {
+      "name": "Recherche conserve la catégorie",
+      "ok": true
+    },
+    {
+      "name": "Recherche invalide refusée",
+      "ok": true
+    },
+    {
+      "name": "Retrait favori idempotent 1",
+      "ok": true
+    },
+    {
+      "name": "Retrait favori idempotent 2",
+      "ok": true
+    },
+    {
+      "name": "Favori effectivement retiré",
+      "ok": true
+    },
+    {
+      "name": "Page HTTP rendue : /index.php",
+      "ok": true
+    },
+    {
+      "name": "Page HTTP rendue : /index.php?categorie=1",
+      "ok": true
+    },
+    {
+      "name": "Page HTTP rendue : /login.php",
+      "ok": true
+    },
+    {
+      "name": "Page HTTP rendue : /creer_enchere.php",
+      "ok": true
+    },
+    {
+      "name": "Page HTTP rendue : /detprod.php?id=3",
+      "ok": true
+    },
+    {
+      "name": "Grille du catalogue en dehors du titre",
+      "ok": true
+    },
+    {
+      "name": "Échec SQL de publication signalé sans détail interne",
+      "ok": true
+    },
+    {
+      "name": "Photo provisoire nettoyée après échec avant commit",
+      "ok": true
+    },
+    {
+      "name": "Échec d’insertion de l’offre signalé",
+      "ok": true
+    },
+    {
+      "name": "Prix et historique annulés ensemble lors de l’échec",
+      "ok": true
+    },
+    {
+      "name": "Offre haute puis offre basse",
+      "ok": true,
+      "evidence": {
+        "scenario": "Offre haute puis offre basse",
+        "requests_waiting": 2,
+        "sql_waits": 2,
+        "statuses": [
+          200,
+          409
+        ],
+        "price": "120.00",
+        "bids": [
+          "120.00"
+        ]
+      }
+    },
+    {
+      "name": "Offre basse puis offre haute",
+      "ok": true,
+      "evidence": {
+        "scenario": "Offre basse puis offre haute",
+        "requests_waiting": 2,
+        "sql_waits": 2,
+        "statuses": [
+          200,
+          200
+        ],
+        "price": "120.00",
+        "bids": [
+          "110.00",
+          "120.00"
+        ]
+      }
+    },
+    {
+      "name": "Deux offres dans la même session",
+      "ok": true,
+      "evidence": {
+        "scenario": "Deux offres dans la même session",
+        "requests_waiting": 2,
+        "sql_waits": 2,
+        "statuses": [
+          200,
+          409
+        ],
+        "price": "120.00",
+        "bids": [
+          "120.00"
+        ]
+      }
+    },
+    {
+      "name": "Échéance revérifiée après l’attente du verrou",
+      "ok": true
+    },
+    {
+      "name": "Ancienne suppression GET de l’administration refusée",
+      "ok": true
+    },
+    {
+      "name": "Archivage sans CSRF refusé",
+      "ok": true
+    },
+    {
+      "name": "Archivage non administrateur refusé",
+      "ok": true
+    },
+    {
+      "name": "Archivage administrateur réel",
+      "ok": true
+    },
+    {
+      "name": "Historique et photo conservés après archivage",
+      "ok": true
+    },
+    {
+      "name": "Annonce archivée retirée de la recherche",
+      "ok": true
+    },
+    {
+      "name": "Annonce archivée inaccessible : /detprod.php?id=3",
+      "ok": true
+    },
+    {
+      "name": "Annonce archivée inaccessible : /get_live_data.php?id=3",
+      "ok": true
+    },
+    {
+      "name": "Annonce archivée inaccessible : /photo.php?id=3",
+      "ok": true
+    },
+    {
+      "name": "Offre sur annonce archivée refusée",
+      "ok": true
+    },
+    {
+      "name": "Favori sur annonce archivée refusé",
+      "ok": true
+    },
+    {
+      "name": "Annonce archivée toujours visible à son propriétaire",
+      "ok": true
+    },
+    {
+      "name": "Restauration sans réouverture des enchères",
+      "ok": true
+    },
+    {
+      "name": "Annonce restaurée et historique lisibles",
+      "ok": true
+    },
+    {
+      "name": "Annonce restaurée conserve sa photo",
+      "ok": true
+    },
+    {
+      "name": "Offre sur annonce restaurée clôturée refusée",
+      "ok": true
+    },
+    {
+      "name": "Clôture administrative conserve les offres historiques",
+      "ok": true
+    },
+    {
+      "name": "Tentative de connexion bornée 1",
+      "ok": true
+    },
+    {
+      "name": "Tentative de connexion bornée 2",
+      "ok": true
+    },
+    {
+      "name": "Tentative de connexion bornée 3",
+      "ok": true
+    },
+    {
+      "name": "Tentative de connexion bornée 4",
+      "ok": true
+    },
+    {
+      "name": "Tentative de connexion bornée 5",
+      "ok": true
+    },
+    {
+      "name": "Tentative de connexion bornée 6",
+      "ok": true
+    },
+    {
+      "name": "Nouveau cookie ne contourne pas la limite",
+      "ok": true
+    },
+    {
+      "name": "Déconnexion GET refusée sans déconnecter",
+      "ok": true
+    },
+    {
+      "name": "Déconnexion POST réelle",
+      "ok": true
+    },
+    {
+      "name": "Ancienne session invalidée après déconnexion",
+      "ok": true
+    },
+    {
+      "name": "Configuration locale exclue des modifications livrées",
+      "ok": true
+    },
+    {
+      "name": "Reconnexion du vendeur pour la suite des droits",
+      "ok": true
+    },
+    {
+      "name": "Choix de la formule Premium enregistré",
+      "ok": true
+    },
+    {
+      "name": "Projet vendeur échappé dans l’administration",
+      "ok": true
+    },
+    {
+      "name": "Un compte ne peut pas retirer la demande d’un autre compte",
+      "ok": true
+    },
+    {
+      "name": "Retrait de sa propre demande",
+      "ok": true
+    },
+    {
+      "name": "Ancienne demande retirée impossible à approuver",
+      "ok": true
+    },
+    {
+      "name": "Choix Standard après retrait",
+      "ok": true
+    },
+    {
+      "name": "Refus sans motif interdit",
+      "ok": true
+    },
+    {
+      "name": "Refus motivé enregistré",
+      "ok": true
+    },
+    {
+      "name": "Motif de refus échappé et nouvelle demande possible",
+      "ok": true
+    },
+    {
+      "name": "Un acheteur refusé ne peut pas publier",
+      "ok": true
+    },
+    {
+      "name": "Catalogue exclut les lots archivés, clôturés et expirés",
+      "ok": true
+    },
+    {
+      "name": "Filtre catégorie appliqué aux vrais résultats",
+      "ok": true
+    },
+    {
+      "name": "Fourchette de prix appliquée en SQL",
+      "ok": true
+    },
+    {
+      "name": "Tri croissant appliqué aux montants réels",
+      "ok": true
+    },
+    {
+      "name": "Tri décroissant et affichage liste cohérents",
+      "ok": true
+    },
+    {
+      "name": "Pagination réelle sans doublon ni lot perdu",
+      "ok": true
+    },
+    {
+      "name": "Liens de pagination conservent la recherche",
+      "ok": true
+    },
+    {
+      "name": "Favori du compte présent dans sa rubrique",
+      "ok": true
+    },
+    {
+      "name": "Catalogue HTML réel : vue=liste",
+      "ok": true
+    },
+    {
+      "name": "Catalogue HTML réel : vue=grille",
+      "ok": true
+    },
+    {
+      "name": "Catalogue HTML réel : q=Lot&categorie=1",
+      "ok": true
+    },
+    {
+      "name": "Catalogue HTML réel : prix_min=100&prix_max=120&tri=prix_decroissant",
+      "ok": true
+    },
+    {
+      "name": "Catalogue HTML réel : tri=recent",
+      "ok": true
+    },
+    {
+      "name": "Filtre invalide refusé : tri=sql-injection",
+      "ok": true
+    },
+    {
+      "name": "Filtre invalide refusé : vue[]=liste",
+      "ok": true
+    },
+    {
+      "name": "Filtre invalide refusé : prix_min=150&prix_max=10",
+      "ok": true
+    },
+    {
+      "name": "Filtre invalide refusé : q[]=Lot",
+      "ok": true
+    },
+    {
+      "name": "Filtre invalide refusé : categorie[]=1",
+      "ok": true
+    },
+    {
+      "name": "Profil modifiable sans élévation de privilège",
+      "ok": true
+    },
+    {
+      "name": "Profil sans CSRF refusé",
+      "ok": true
+    },
+    {
+      "name": "Rubrique acheteur réelle : accueil",
+      "ok": true
+    },
+    {
+      "name": "Rubrique acheteur réelle : encheres",
+      "ok": true
+    },
+    {
+      "name": "Rubrique acheteur réelle : favoris",
+      "ok": true
+    },
+    {
+      "name": "Rubrique acheteur réelle : profil",
+      "ok": true
+    },
+    {
+      "name": "Anciennes offres présentes dans Mon compte",
+      "ok": true
+    },
+    {
+      "name": "Publication et suspension réellement en attente SQL",
+      "ok": true
+    },
+    {
+      "name": "Suspension appliquée avant l’insertion concurrente",
+      "ok": true
+    },
+    {
+      "name": "Aucune annonce ni photo conservée après publication révoquée",
+      "ok": true
+    },
+    {
+      "name": "Suspension visible sans reconnexion",
+      "ok": true
+    },
+    {
+      "name": "Compte suspendu garde ses anciennes annonces",
+      "ok": true
+    },
+    {
+      "name": "Nouvelle demande ne contourne pas une suspension",
+      "ok": true
+    },
+    {
+      "name": "Vendeur suspendu conserve ses droits acheteur",
+      "ok": true
+    },
+    {
+      "name": "Réactivation explicite par administrateur",
+      "ok": true
+    },
+    {
+      "name": "Réactivation applicable à la même session",
+      "ok": true
+    },
+    {
+      "name": "Relancer la migration ne réactive pas les vendeurs suspendus",
+      "ok": true
+    },
+    {
+      "name": "Relancer la migration ne valide pas les demandes refusées",
+      "ok": true
+    },
+    {
+      "name": "Aucun abonnement payé créé par la migration",
+      "ok": true
+    },
+    {
+      "name": "Migration absente : page de maintenance HTTP 503",
+      "ok": true
+    },
+    {
+      "name": "Migration absente : API JSON HTTP 503 sans fuite SQL",
+      "ok": true
+    },
+    {
+      "name": "Site à nouveau accessible après migration présente",
+      "ok": true
+    }
+  ],
+  "concurrency": [
+    {
+      "scenario": "Offre haute puis offre basse",
+      "requests_waiting": 2,
+      "sql_waits": 2,
+      "statuses": [
+        200,
+        409
+      ],
+      "price": "120.00",
+      "bids": [
+        "120.00"
+      ]
+    },
+    {
+      "scenario": "Offre basse puis offre haute",
+      "requests_waiting": 2,
+      "sql_waits": 2,
+      "statuses": [
+        200,
+        200
+      ],
+      "price": "120.00",
+      "bids": [
+        "110.00",
+        "120.00"
+      ]
+    },
+    {
+      "scenario": "Deux offres dans la même session",
+      "requests_waiting": 2,
+      "sql_waits": 2,
+      "statuses": [
+        200,
+        409
+      ],
+      "price": "120.00",
+      "bids": [
+        "120.00"
+      ]
+    }
+  ],
+  "linted_php_files": [
+    "about.php",
+    "admin.php",
+    "admin_vendeurs.php",
+    "auth.php",
+    "bin/migrate.php",
+    "bin/promouvoir-admin.php",
+    "bin/verifier-installation.php",
+    "bootstrap.php",
+    "choix.php",
+    "compte.php",
+    "config.php",
+    "creer_enchere.php",
+    "cron_terminer_encheres.php",
+    "detprod.php",
+    "devenir_vendeur.php",
+    "get_live_data.php",
+    "index.php",
+    "layout.php",
+    "lib/vendeurs.php",
+    "login.php",
+    "mes_annonces.php",
+    "photo.php",
+    "recherche.php",
+    "traitement_creation.php",
+    "traitement_demande_vendeur.php",
+    "traitement_enchere.php",
+    "traitement_favori.php"
+  ]
+}

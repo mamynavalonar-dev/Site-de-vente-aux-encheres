@@ -62,8 +62,59 @@ try {
         applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB");
     $pdo->exec("INSERT IGNORE INTO schema_migrations(version) VALUES ('20261017_comptes_annonces')");
+    $userType = $id['COLUMN_TYPE'];
+    $pdo->exec("CREATE TABLE IF NOT EXISTS seller_access (
+        user_id $userType NOT NULL PRIMARY KEY,
+        plan_code VARCHAR(30) CHARACTER SET ascii NOT NULL,
+        status ENUM('pending','active','rejected','suspended','cancelled') NOT NULL,
+        organisation VARCHAR(150) NOT NULL DEFAULT '',
+        telephone VARCHAR(40) NOT NULL DEFAULT '',
+        project TEXT NOT NULL,
+        requested_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        reviewed_at DATETIME NULL,
+        reviewed_by $userType NULL,
+        reason VARCHAR(1000) NOT NULL DEFAULT '',
+        version INT UNSIGNED NOT NULL DEFAULT 1,
+        source VARCHAR(20) CHARACTER SET ascii NOT NULL DEFAULT 'request',
+        KEY ix_seller_access_status_date (status, requested_at),
+        CONSTRAINT fk_seller_access_user FOREIGN KEY (user_id) REFERENCES utilisateurs(id) ON DELETE RESTRICT,
+        CONSTRAINT fk_seller_access_reviewer FOREIGN KEY (reviewed_by) REFERENCES utilisateurs(id) ON DELETE RESTRICT
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS seller_events (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        user_id $userType NOT NULL,
+        actor_id $userType NULL,
+        action VARCHAR(30) CHARACTER SET ascii NOT NULL,
+        status VARCHAR(20) CHARACTER SET ascii NOT NULL,
+        plan_code VARCHAR(30) CHARACTER SET ascii NOT NULL,
+        reason VARCHAR(1000) NOT NULL DEFAULT '',
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        KEY ix_seller_events_user_date (user_id, created_at, id),
+        CONSTRAINT fk_seller_events_user FOREIGN KEY (user_id) REFERENCES utilisateurs(id) ON DELETE RESTRICT,
+        CONSTRAINT fk_seller_events_actor FOREIGN KEY (actor_id) REFERENCES utilisateurs(id) ON DELETE RESTRICT
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $pdo->beginTransaction();
+    $version = '20261017_acheteur_vendeur';
+    $query = $pdo->prepare('SELECT version FROM schema_migrations WHERE version = ?');
+    $query->execute([$version]);
+    if (!$query->fetchColumn()) {
+        // Seuls les comptes déjà associés à une annonce conservent leur accès vendeur.
+        // Ce maintien d'accès ne crée ni abonnement payé ni propriétaire pour les anciens lots anonymes.
+        $pdo->exec("INSERT INTO seller_access(user_id, plan_code, status, project, reviewed_at, source)
+            SELECT DISTINCT p.vendeur_id, 'historique', 'active', 'Accès conservé : annonce publiée avant cette migration.', NOW(), 'historique'
+            FROM produits p JOIN utilisateurs u ON u.id = p.vendeur_id
+            WHERE p.vendeur_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM seller_access s WHERE s.user_id = p.vendeur_id)");
+        $pdo->exec("INSERT INTO seller_events(user_id, action, status, plan_code, reason)
+            SELECT s.user_id, 'migration', s.status, s.plan_code, 'Accès vendeur existant conservé.' FROM seller_access s
+            WHERE s.source = 'historique' AND NOT EXISTS(SELECT 1 FROM seller_events e WHERE e.user_id = s.user_id)");
+        $query = $pdo->prepare('INSERT INTO schema_migrations(version) VALUES (?)');
+        $query->execute([$version]);
+    }
+    $pdo->commit();
+    echo "[OK] Parcours acheteur/vendeur installé ; accès des vendeurs existants conservé.\n";
     echo "[OK] Migration terminée. Les comptes, lots, offres, favoris et photos existants sont conservés.\n";
 } catch (Throwable $error) {
+    if ($pdo->inTransaction()) { $pdo->rollBack(); }
     fwrite(STDERR, 'Migration interrompue : ' . $error->getMessage() . "\nCorrigez la cause puis relancez ce script : les ajouts déjà effectués sont reconnus.\n");
     $code = 1;
 } finally {

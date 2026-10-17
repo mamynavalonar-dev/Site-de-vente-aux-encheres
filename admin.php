@@ -42,7 +42,7 @@ $users = $pdo->query('SELECT id, nom, email, is_admin FROM utilisateurs ORDER BY
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f4f4f4;color:#222;font-family:Arial,sans-serif;padding:24px}main{max-width:1400px;margin:auto}nav{display:flex;gap:20px;align-items:center;flex-wrap:wrap}a{color:#2458b2}.panel{background:white;border-radius:10px;padding:20px;margin:24px 0;overflow-x:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:12px;border-bottom:1px solid #ddd}th{background:#11101d;color:white}td form{display:inline-block;margin:3px}button{padding:8px;cursor:pointer;border:1px solid #aaa;border-radius:4px;background:#fff}h1{margin-top:30px}.status{color:#555;font-size:.9rem}
 </style></head><body><main>
-<nav><a href="index.php">← Catalogue</a><a href="mes_annonces.php">Mes annonces</a><?php app_logout_form(); ?></nav>
+<nav><a href="index.php">← Catalogue</a><a href="compte.php">Mon compte</a><a href="admin_vendeurs.php">Demandes vendeur</a><a href="mes_annonces.php">Mes annonces</a><?php app_logout_form(); ?></nav>
 <h1>Administration</h1>
 <?php if (in_array($_GET['done'] ?? null, ['close', 'archive', 'restore'], true)): ?><p role="status">Modification enregistrée.</p><?php endif; ?>
 <section class="panel"><h2>Annonces</h2><p>L’archivage retire un lot du catalogue en conservant ses photos et ses offres. Restaurer un lot le laisse clôturé.</p>

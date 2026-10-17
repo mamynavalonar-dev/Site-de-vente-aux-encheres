@@ -1,10 +1,10 @@
 # Site de vente aux enchères
 
-Application PHP/MySQL existante, en cours de finalisation. La branche `finalisation-production` contient les corrections des enchères, puis la sécurisation des comptes et des annonces. Cette étape ne constitue pas encore une validation de mise en production.
+Application PHP/MySQL existante, en cours de finalisation. La branche `finalisation-production` contient les corrections des enchères, la sécurisation des comptes et le parcours visiteur → acheteur → vendeur. Cette étape ne constitue pas encore une validation de mise en production.
 
 ## Récupérer cette étape sur une installation existante
 
-Depuis le dossier du projet, sur la branche `finalisation-production` :
+Arrêter le serveur PHP avec Ctrl+C s’il est lancé. Depuis le dossier du projet, sur la branche `finalisation-production` :
 
 ```bash
 git pull --ff-only
@@ -19,7 +19,7 @@ php bin/verifier-installation.php
 
 Le `config.php` n’est pas modifié par cette étape. Les anciens fichiers locaux de reconstitution ne sont ni importés, ni exécutés par ces commandes. Aucun compte et aucune annonce ne sont ajoutés par la migration.
 
-La migration ajoute `produits.vendeur_id`, `produits.archive_le`, les compteurs de connexion et un registre des migrations. Elle conserve les colonnes et les données existantes. Les anciens lots restent avec un vendeur « Non renseigné » : leur propriétaire ne peut pas être déduit de leur catégorie. Les nouveaux lots sont attribués au compte connecté.
+La migration ajoute, si nécessaire, `produits.vendeur_id`, `produits.archive_le`, les compteurs de connexion et un registre des migrations, puis les tables `seller_access` et `seller_events`. Elle conserve les colonnes et les données existantes. Les anciens lots sans vendeur restent « Non renseigné » : leur propriétaire ne peut pas être déduit de leur catégorie. Les comptes déjà associés à une annonce conservent leur accès vendeur avec une origine historique, sans paiement ou abonnement inventé. Les nouvelles inscriptions restent uniquement acheteur.
 
 Les changements de structure MySQL/MariaDB ne sont pas annulables comme une transaction métier. Si le script s’interrompt, lire son erreur, corriger la cause puis le relancer : il reconnaît ses ajouts déjà effectués. Il refuse une base dont les cinq tables initiales sont absentes ou ne sont pas en InnoDB. Une sauvegarde de la base existante doit accompagner une intervention sur une installation utilisée.
 
@@ -40,9 +40,24 @@ php -S 127.0.0.1:8000 -t .
 
 Il ne remplace pas un serveur d’hébergement. Il ignore les règles `.htaccess`.
 
+## Visiteur, acheteur et vendeur
+
+- Le visiteur consulte le catalogue, les catégories, les filtres et les fiches. Pour déposer une offre ou conserver des favoris, il se connecte.
+- L’inscription crée un compte acheteur. Après connexion, `compte.php` propose « Mes enchères », « Mes favoris », « Mes informations » et le bouton « Devenir vendeur ».
+- `devenir_vendeur.php` présente les formules Essentiel, Standard et Premium. Le compte choisit une formule et transmet son projet ; la demande reste en attente.
+- Un administrateur examine les demandes dans `admin_vendeurs.php`, accessible depuis son menu de compte ou depuis l’administration des annonces.
+- Seule une validation administrative donne accès à la publication. Un vendeur conserve ses droits d’acheteur et ne peut pas enchérir sur son propre lot.
+- Une suspension bloque les nouvelles publications, y compris une requête directe et une publication qui attend un verrou SQL. Les annonces et les offres existantes sont conservées et restent consultables selon leur visibilité.
+
+Les captures de référence ne définissent ni tarifs, ni périodicité, ni prestataire de paiement. Cette étape utilise donc de vraies demandes et décisions enregistrées, avec des conditions sur devis. Elle ne simule aucun paiement et ne crée aucun abonnement facturé. Le raccordement d’un abonnement payant nécessitera les tarifs, la devise, la périodicité, le prestataire et une confirmation serveur du paiement.
+
+Les demandes peuvent être retirées puis représentées. Un refus indique son motif au propriétaire de la demande. Une suspension nécessite une réactivation administrative. Les décisions utilisent une version de formulaire pour refuser les décisions périmées, et un journal SQL conserve leurs événements.
+
+La navigation horizontale, le catalogue avec vues grille/liste, les filtres, le compte, les formules et la fiche produit partagent une présentation bleu/jaune et des ressources locales. Les images affichées restent celles des véritables lots de la base. Aucun logo, témoignage ou chiffre commercial d’Agorastore n’est repris.
+
 ## Comptes et administration
 
-L’inscription crée uniquement un membre. Le nom public apparaît dans les offres. Les nouveaux mots de passe comportent 15 à 128 caractères ; si Argon2id est disponible, il est utilisé. Sinon, le repli bcrypt refuse les inscriptions dépassant sa limite de 72 octets. Les anciens hachages restent vérifiables.
+L’inscription crée uniquement un acheteur ; le rôle administrateur et l’accès vendeur ne sont pas acceptés depuis le formulaire. Le nom public apparaît dans les offres. Les nouveaux mots de passe comportent 15 à 128 caractères ; si Argon2id est disponible, il est utilisé. Sinon, le repli bcrypt refuse les inscriptions dépassant sa limite de 72 octets. Les anciens hachages restent vérifiables.
 
 Les formulaires disposent d’un jeton CSRF. La connexion renouvelle l’identifiant de session ; la déconnexion passe par POST. Les sessions ont une limite d’inactivité de 30 minutes et une durée maximale de huit heures. Les droits sont relus en base : une révocation administrative s’applique à la prochaine requête.
 
@@ -60,7 +75,7 @@ L’administration permet de clôturer, d’archiver et de restaurer une annonce
 
 ## Annonces, photos et enchères
 
-« Mes annonces » affiche uniquement les annonces du compte connecté. Les nouvelles annonces disposent d’un vendeur ; celui-ci ne peut pas enchérir sur son propre lot, y compris par une requête directe à l’API.
+« Mes annonces » affiche uniquement les annonces du compte connecté. La création HTML et l’API de publication exigent un accès vendeur actif. Les nouvelles annonces disposent d’un vendeur ; celui-ci ne peut pas enchérir sur son propre lot, y compris par une requête directe à l’API. Le droit de publication est revérifié dans la transaction d’insertion, après toute attente de verrou.
 
 Le contrôle des photos utilise le contenu du fichier, son type réel, ses dimensions et sa taille. Formats : JPEG, PNG et WebP ; limite de 5 Mo, 8192 pixels par côté et 20 millions de pixels. Les noms sont générés par le serveur. Une photo JPEG appelée `photo.php` est enregistrée comme une image sous un nom aléatoire ; un programme PHP déguisé en JPEG est refusé.
 
@@ -78,14 +93,20 @@ Les enchères conservent le verrou SQL, les montants comparés en centimes et le
 
 ## Vérification manuelle après installation
 
-1. Actualiser le site avec Ctrl+F5, puis se déconnecter et se reconnecter.
-2. Créer une annonce avec une vraie photo. Vérifier sa présence dans « Mes annonces » et son vendeur sur la fiche.
-3. Vérifier que le vendeur ne peut pas enchérir sur son annonce.
-4. Ouvrir un autre compte dans une fenêtre privée, déposer une offre puis vérifier le prix et l’historique dans les deux fenêtres.
-5. Vérifier la recherche, l’effacement de la recherche et les favoris dans une catégorie.
-6. Avec le compte administrateur, archiver un lot puis le restaurer ; vérifier que l’historique est conservé et que les enchères restent clôturées.
+1. Actualiser avec Ctrl+F5. En visiteur, vérifier l’absence du bouton vendeur dans l’en-tête, puis consulter un lot.
+2. S’inscrire ou ouvrir un compte acheteur sans annonce existante. Vérifier le bouton « Devenir vendeur » et les rubriques du compte.
+3. Choisir une formule, décrire le projet et envoyer la demande. Vérifier son état en attente et l’impossibilité de publier.
+4. Depuis un compte administrateur, ouvrir « Demandes vendeur », puis valider cette demande.
+5. Actualiser le compte demandeur : « Espace vendeur » et « Créer une annonce » deviennent accessibles sans changer de compte.
+6. Créer une annonce avec une vraie photo. Vérifier « Mes annonces », son vendeur et l’interdiction d’enchérir sur son propre lot.
+7. Ouvrir un autre compte dans une fenêtre privée, déposer une offre et contrôler le prix ainsi que l’historique dans les deux fenêtres.
+8. Vérifier recherche, catégorie, fourchette de prix, tri, vues grille/liste et favoris. Vérifier les rubriques « Mes enchères » et « Mes favoris ».
+9. Suspendre le vendeur depuis l’administration : ses anciennes annonces restent accessibles, la création est bloquée, son compte reste acheteur.
+10. Archiver un lot puis le restaurer : l’historique reste conservé et les enchères restent clôturées.
 
-Le détail des contrôles réalisés est dans `docs/verification-comptes-annonces.md` et son rapport JSON. Les requêtes HTTP, PHP et SQL sont réelles ; les données d’essai ne sont créées que dans une base isolée. L’interaction dans un vrai navigateur et les règles Apache n’ont pas été validées automatiquement.
+La dernière étape comporte 203 contrôles natifs réussis et 27 fichiers PHP valides. Le détail est dans `docs/verification-parcours-vendeur.md` et son rapport JSON. Les requêtes HTTP, PHP et SQL sont réelles ; les données d’essai ne sont créées que dans une base isolée. L’interaction dans un vrai navigateur, la présentation sur mobile et les règles Apache n’ont pas été validées automatiquement. Les rapports de l’étape précédente restent dans `docs/verification-comptes-annonces.*`.
+
+Si les fichiers ont été mis à jour avant la migration, le site répond HTTP 503 avec une page de maintenance, et les API répondent JSON 503. Les journaux PHP indiquent la commande `php bin/migrate.php`, sans exposer de trace SQL au visiteur.
 
 ## Étapes restantes
 

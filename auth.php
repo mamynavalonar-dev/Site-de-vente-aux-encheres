@@ -83,7 +83,7 @@ try {
     $_SESSION['authenticated_at'] = time();
     $_SESSION['last_activity'] = time();
     app_csrf_token();
-    header('Location: index.php', true, 303);
+    header('Location: compte.php', true, 303);
     exit;
 } catch (InvalidArgumentException $error) {
     auth_redirect('error=empty');

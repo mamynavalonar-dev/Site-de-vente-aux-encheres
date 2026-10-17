@@ -1,17 +1,17 @@
 <?php
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/layout.php';
+require_once __DIR__ . '/lib/vendeurs.php';
+require_once __DIR__ . '/cron_terminer_encheres.php';
 $user = app_require_user(false);
 $page = filter_var($_GET['page'] ?? 1, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 100000]]) ?: 1;
-$offset = ($page - 1) * 50;
-$query = $pdo->prepare("SELECT id, nom, prix_actuel, statut, date_fin, archive_le FROM produits WHERE vendeur_id = ? ORDER BY id DESC LIMIT 51 OFFSET $offset");
-$query->execute([$user['id']]);
-$products = $query->fetchAll();
-$next = count($products) > 50;
-$products = array_slice($products, 0, 50);
+$offset = ($page - 1) * 30;
+$query = $pdo->prepare("SELECT p.*, TIMESTAMPDIFF(SECOND,NOW(),p.date_fin) AS secondes_restantes FROM produits p WHERE vendeur_id = ? ORDER BY id DESC LIMIT 31 OFFSET $offset");
+$query->execute([$user['id']]); $products = $query->fetchAll(); $next = count($products) > 30; $products = array_slice($products, 0, 30);
+app_page_start('Mes annonces', 'annonces');
 ?>
-<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mes annonces</title><style>body{font-family:Arial,sans-serif;background:#f4f4f4;color:#222;margin:0;padding:24px}main{max-width:1000px;margin:auto}nav{display:flex;gap:24px;flex-wrap:wrap;align-items:center}article{background:#fff;border-radius:8px;padding:20px;margin:20px 0}a{color:#2458b2}h2{font-size:1.15rem}</style></head><body><main>
-<nav><a href="index.php">← Catalogue</a><a href="creer_enchere.php">Créer une annonce</a><?php app_logout_form(); ?></nav><h1>Mes annonces</h1>
-<?php if (!$products): ?><p>Vous n’avez pas encore publié d’annonce.</p><?php endif; ?>
-<?php foreach ($products as $product): ?><article><h2><?= app_escape($product['nom']) ?></h2><p><?= number_format($product['prix_actuel'], 2, ',', ' ') ?> € · <?= $product['archive_le'] !== null ? 'Archivée' : ($product['statut'] === 'terminee' || $product['date_fin'] <= date('Y-m-d H:i:s') ? 'Clôturée' : 'En cours') ?></p><p>Fin : <?= app_escape($product['date_fin']) ?></p><?php if ($product['archive_le'] === null): ?><a href="detprod.php?id=<?= (int) $product['id'] ?>">Voir l’annonce et les offres</a><?php endif; ?></article><?php endforeach; ?>
-<nav><?php if ($page > 1): ?><a href="?page=<?= $page - 1 ?>">Page précédente</a><?php endif; ?><span>Page <?= $page ?></span><?php if ($next): ?><a href="?page=<?= $page + 1 ?>">Page suivante</a><?php endif; ?></nav>
-</main></body></html>
+<section class="container section"><div class="catalog-heading" style="margin-top:0"><div><p class="eyebrow">Votre espace vendeur</p><h1>Mes annonces.</h1><p>Retrouvez vos lots, leurs prix et les offres reçues.</p></div><?php if (app_is_seller($user)): ?><a class="button button-yellow" href="creer_enchere.php"><?= app_icon('plus') ?>Créer une annonce</a><?php else: ?><a class="button button-outline" href="devenir_vendeur.php">Mon accès vendeur</a><?php endif; ?></div>
+<?php if (!app_is_seller($user)) { app_notice('Votre compte reste acheteur. La publication de nouvelles annonces nécessite un accès vendeur actif.'); } ?>
+<?php if (!$products): ?><div class="empty-state"><?= app_icon('tag') ?><h2>Votre première annonce vous attend.</h2><p><?= app_is_seller($user) ? 'Présentez un bien avec une photo, une description et un prix de départ.' : 'Choisissez votre formule et demandez l’accès vendeur pour commencer à publier.' ?></p><a class="button button-blue" href="<?= app_is_seller($user) ? 'creer_enchere.php' : 'devenir_vendeur.php' ?>"><?= app_is_seller($user) ? 'Créer une annonce' : 'Découvrir les formules' ?></a></div><?php endif; ?>
+<div class="account-list"><?php foreach ($products as $product): $closed = $product['statut'] !== 'en_cours' || (int) $product['secondes_restantes'] <= 0; ?><article class="account-lot"><?php if ($product['archive_le'] === null): ?><a href="detprod.php?id=<?= (int) $product['id'] ?>"><img src="photo.php?id=<?= (int) $product['id'] ?>" alt="" loading="lazy"></a><?php else: ?><div class="hero-art" style="min-height:85px"><?= app_icon('tag') ?></div><?php endif; ?><div><p class="lot-reference">LOT #<?= (int) $product['id'] ?></p><h2 class="small-heading"><?= app_escape($product['nom']) ?></h2><p>Prix actuel : <strong><?= number_format($product['prix_actuel'], 2, ',', ' ') ?> €</strong></p><p>Fin le <?= app_escape(date('d/m/Y à H:i', strtotime($product['date_fin']))) ?></p><span class="status-pill <?= $closed || $product['archive_le'] !== null ? 'status-muted' : '' ?>"><?= $product['archive_le'] !== null ? 'Archivée' : ($closed ? 'Clôturée' : 'En cours') ?></span></div><?php if ($product['archive_le'] === null): ?><a class="button button-outline button-small" href="detprod.php?id=<?= (int) $product['id'] ?>">Voir les offres <?= app_icon('arrow') ?></a><?php endif; ?></article><?php endforeach; ?></div>
+<?php if ($page > 1 || $next): ?><nav class="pagination" aria-label="Pages de mes annonces"><?php if ($page > 1): ?><a href="?page=<?= $page - 1 ?>">Précédente</a><?php endif; ?><span>Page <?= $page ?></span><?php if ($next): ?><a href="?page=<?= $page + 1 ?>">Suivante</a><?php endif; ?></nav><?php endif; ?>
+</section><?php app_page_end(); ?>

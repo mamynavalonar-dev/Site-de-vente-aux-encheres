@@ -4,7 +4,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     header('Allow: POST');
     app_json(405, ['success' => false, 'message' => 'Méthode non autorisée.']);
 }
-$user = app_require_user();
+$user = app_require_seller();
 if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 6 * 1024 * 1024) {
     app_json(413, ['success' => false, 'message' => 'Le fichier doit faire au maximum 5 Mo.']);
 }
@@ -60,6 +60,7 @@ try {
     if (!move_uploaded_file($upload['tmp_name'], $path)) { throw new RuntimeException('Stockage de la photo impossible.'); }
     @chmod($path, 0640);
     $pdo->beginTransaction();
+    app_lock_seller((int) $user['id']);
     $query = $pdo->prepare("INSERT INTO produits(nom, categorie_id, description, prix_depart, prix_actuel, date_fin, image_url, statut, vendeur_id)
         SELECT ?, ?, ?, ?, ?, ?, ?, 'en_cours', ? FROM DUAL WHERE ? > NOW()");
     $query->execute([$name, $category, $description, $amount, $amount, $end, $filename, $user['id'], $end]);
@@ -74,6 +75,7 @@ try {
     // Un accusé de réception du COMMIT perdu ne justifie pas d'effacer la photo d'un lot éventuellement enregistré.
     if ($path !== null && !$commitAttempted && is_file($path)) { @unlink($path); }
     if ($error instanceof InvalidArgumentException) { app_json(422, ['success' => false, 'message' => $error->getMessage()]); }
+    if ($error instanceof DomainException) { app_json(403, ['success' => false, 'message' => $error->getMessage(), 'code' => 'seller_required']); }
     error_log('Publication impossible : ' . $error->getMessage());
     app_json(500, ['success' => false, 'message' => 'Impossible de confirmer la publication. Vérifiez « Mes annonces » avant de réessayer.']);
 }
