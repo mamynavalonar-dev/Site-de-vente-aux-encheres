@@ -1,5 +1,5 @@
 <?php
-require_once 'config.php';
+require_once __DIR__ . '/bootstrap.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
@@ -33,7 +33,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     enchere_repondre(405, false, 'Méthode non autorisée.', ['code' => 'method_not_allowed']);
 }
 
-$utilisateurId = filter_var($_SESSION['user_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+$user = app_current_user();
+$utilisateurId = $user ? (int) $user['id'] : null;
 if (!$utilisateurId) {
     enchere_repondre(401, false, 'Vous devez être connecté pour enchérir.', ['code' => 'authentication_required']);
 }
@@ -64,13 +65,18 @@ if ($centimes === '0') {
 
 try {
     $pdo->beginTransaction();
-    $lecture = $pdo->prepare('SELECT prix_actuel, date_fin, statut FROM produits WHERE id = ? FOR UPDATE');
+    $lecture = $pdo->prepare('SELECT prix_actuel, date_fin, statut, vendeur_id, archive_le FROM produits WHERE id = ? FOR UPDATE');
     $lecture->execute([$produitId]);
     $produit = $lecture->fetch();
 
-    if (!$produit) {
+    if (!$produit || $produit['archive_le'] !== null) {
         $pdo->rollBack();
         enchere_repondre(404, false, 'Produit introuvable.', ['code' => 'auction_not_found']);
+    }
+
+    if ($produit['vendeur_id'] !== null && (int) $produit['vendeur_id'] === $utilisateurId) {
+        $pdo->rollBack();
+        enchere_repondre(403, false, 'Vous ne pouvez pas enchérir sur votre propre annonce.', ['code' => 'own_auction']);
     }
 
     // Cette nouvelle requête prend l'heure APRÈS l'attente éventuelle du verrou.

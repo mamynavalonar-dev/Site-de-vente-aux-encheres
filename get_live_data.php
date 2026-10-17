@@ -1,5 +1,5 @@
 <?php
-require_once 'config.php';
+require_once __DIR__ . '/bootstrap.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
@@ -25,7 +25,7 @@ try {
         FROM produits p
         LEFT JOIN encheres e ON e.produit_id = p.id
         LEFT JOIN utilisateurs u ON u.id = e.utilisateur_id
-        WHERE p.id = ?
+        WHERE p.id = ? AND p.archive_le IS NULL
         ORDER BY e.date_enchere DESC, e.montant DESC, e.utilisateur_id DESC
         LIMIT 50
     ");

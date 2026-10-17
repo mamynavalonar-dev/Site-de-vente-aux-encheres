@@ -1,7 +1,8 @@
 <?php
-require_once 'config.php';
+require_once __DIR__ . '/bootstrap.php';
+$csrf = app_csrf_token();
 // Si déjà connecté, on le jette sur l'accueil
-if(isset($_SESSION['user_id'])) { header('Location: index.php'); exit; }
+if(app_current_user()) { header('Location: index.php'); exit; }
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -11,8 +12,8 @@ if(isset($_SESSION['user_id'])) { header('Location: index.php'); exit; }
     <title>Connexion / Inscription</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background: #11101D; display: flex; justify-content: center; align-items: center; height: 100vh; color: #fff; }
-        .box { background: #1d1b31; padding: 30px; border-radius: 8px; width: 350px; }
+        body { background: #11101D; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; color: #fff; }
+        .box { background: #1d1b31; padding: 30px; border-radius: 8px; width: 350px; max-width: 100%; }
         h2 { margin-bottom: 20px; text-align: center; }
         input, button { width: 100%; padding: 10px; margin: 8px 0; border: none; border-radius: 4px; box-sizing: border-box; }
         input { background: #fff; color: #000; }
@@ -31,9 +32,16 @@ if(isset($_SESSION['user_id'])) { header('Location: index.php'); exit; }
         <?php if(isset($_GET['error'])): ?>
             <div class="msg error">
                 <?php 
-                    if($_GET['error'] == 'empty') echo "Remplissez tous les champs.";
-                    if($_GET['error'] == 'exists') echo "Cet email est déjà utilisé.";
-                    if($_GET['error'] == 'invalid') echo "Email ou mot de passe incorrect.";
+                    $errors = [
+                        'empty' => 'Vérifiez les champs du formulaire.',
+                        'email' => 'Indiquez une adresse email valide.',
+                        'csrf' => 'Le formulaire a expiré. Actualisez la page.',
+                        'password' => 'Utilisez un mot de passe de 15 à 128 caractères.',
+                        'password_long' => 'Cet hébergement limite les mots de passe à 72 octets.',
+                        'rate' => 'Trop de tentatives. Réessayez dans 15 minutes.',
+                        'unavailable' => 'Impossible de terminer la demande. Si vous avez déjà un compte, connectez-vous.',
+                    ];
+                    echo app_escape($errors[is_string($_GET['error']) ? $_GET['error'] : ''] ?? 'Email ou mot de passe incorrect.');
                 ?>
             </div>
         <?php endif; ?>
@@ -45,22 +53,25 @@ if(isset($_SESSION['user_id'])) { header('Location: index.php'); exit; }
         <!-- FORMULAIRE CONNEXION -->
         <form id="login-form" method="POST" action="auth.php">
             <input type="hidden" name="action" value="login">
+            <input type="hidden" name="csrf_token" value="<?= app_escape($csrf) ?>">
             <h2>Connexion</h2>
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Mot de passe" required>
+            <input type="email" name="email" placeholder="Email" aria-label="Email" autocomplete="email" maxlength="254" required>
+            <input type="password" name="password" placeholder="Mot de passe" aria-label="Mot de passe" autocomplete="current-password" required>
             <button type="submit">Se connecter</button>
-            <div class="toggle">Pas de compte ? <a href="#" onclick="toggleForms()">S'inscrire</a></div>
+            <div class="toggle">Pas de compte ? <a href="#" onclick="toggleForms(); return false">S'inscrire</a></div>
         </form>
 
         <!-- FORMULAIRE INSCRIPTION -->
         <form id="register-form" class="hidden" method="POST" action="auth.php">
             <input type="hidden" name="action" value="register">
+            <input type="hidden" name="csrf_token" value="<?= app_escape($csrf) ?>">
             <h2>Inscription</h2>
-            <input type="text" name="nom" placeholder="Nom complet" required>
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Mot de passe" required>
+            <p style="font-size:13px">Votre nom public apparaîtra dans les offres. Mot de passe : 15 caractères minimum.</p>
+            <input type="text" name="nom" placeholder="Nom public" aria-label="Nom public affiché dans les enchères" autocomplete="nickname" maxlength="150" required>
+            <input type="email" name="email" placeholder="Email" aria-label="Email" autocomplete="email" maxlength="254" required>
+            <input type="password" name="password" placeholder="15 caractères minimum" aria-label="Nouveau mot de passe" autocomplete="new-password" minlength="15" maxlength="128" required>
             <button type="submit">Créer mon compte</button>
-            <div class="toggle">Déjà un compte ? <a href="#" onclick="toggleForms()">Se connecter</a></div>
+            <div class="toggle">Déjà un compte ? <a href="#" onclick="toggleForms(); return false">Se connecter</a></div>
         </form>
     </div>
 

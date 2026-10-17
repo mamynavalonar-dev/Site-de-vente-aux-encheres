@@ -1,19 +1,17 @@
 <?php
-require_once 'config.php';
+require_once __DIR__ . '/bootstrap.php';
 require_once 'cron_terminer_encheres.php';
 
-if (isset($_SESSION['user_id']) &&
-    (!isset($_SESSION['csrf_enchere']) || !is_string($_SESSION['csrf_enchere']) || strlen($_SESSION['csrf_enchere']) !== 64)) {
-    $_SESSION['csrf_enchere'] = bin2hex(random_bytes(32));
-}
+$user = app_current_user();
+$csrf = app_csrf_token();
 
 // Sécurité de l'ID
-if(!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+if(!filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])) {
     header('Location: index.php');
     exit;
 }
 
- $req = $pdo->prepare("SELECT p.*, c.nom as categorie_nom, TIMESTAMPDIFF(SECOND, NOW(), p.date_fin) AS secondes_restantes FROM produits p LEFT JOIN categories c ON p.categorie_id = c.id WHERE p.id = ?");
+ $req = $pdo->prepare("SELECT p.*, c.nom as categorie_nom, u.nom AS vendeur_nom, TIMESTAMPDIFF(SECOND, NOW(), p.date_fin) AS secondes_restantes FROM produits p LEFT JOIN categories c ON p.categorie_id = c.id LEFT JOIN utilisateurs u ON u.id = p.vendeur_id WHERE p.id = ? AND p.archive_le IS NULL");
  $req->execute([$_GET['id']]);
  $produit = $req->fetch();
  // Récupération de l'historique des enchères pour ce produit (Jointure pour avoir le nom de l'utilisateur)
@@ -28,6 +26,7 @@ if(!isset($_GET['id']) || !is_numeric($_GET['id'])) {
  $hist_req->execute([$_GET['id']]);
  $historique = $hist_req->fetchAll();
 if(!$produit) {
+    http_response_code(404);
     echo "<h1 style='text-align:center;margin-top:50px;'>Ce produit n'existe pas.</h1>";
     exit;
 }
@@ -210,13 +209,14 @@ if(!$produit) {
             </li>
             
             <!-- LE BOUTON POUR CRÉER -->
-            <?php if(isset($_SESSION['user_id'])): ?>
+            <?php if($user): ?>
             <li>
                 <a href="creer_enchere.php">
                     <i class='bx bx-plus-circle'></i>
                     <span class="links_name">Créer une enchère</span>
                 </a>
             </li>
+            <li><a href="mes_annonces.php"><i class="bx bx-list-ul"></i><span class="links_name">Mes annonces</span></a></li>
             <?php endif; ?>
         </ul>
     </div>
@@ -227,9 +227,9 @@ if(!$produit) {
             <i class='bx bx-menu' id="mobile-btn"></i>
             <h2>Détail de l'enchère</h2>
             <div class="user-area">
-                <?php if(isset($_SESSION['user_nom'])): ?>
+                <?php if($user): ?>
                     <span>Bonjour, <strong><?= htmlspecialchars($_SESSION['user_nom']) ?></strong></span>
-                    <a href="auth.php?action=logout" class="logout"><i class='bx bx-log-out'></i> Deconnexion</a>
+                    <?php app_logout_form(); ?>
                 <?php else: ?>
                     <a href="login.php"><i class='bx bx-log-in'></i> Connexion</a>
                 <?php endif; ?>
@@ -238,7 +238,7 @@ if(!$produit) {
 
         <div class="product-layout">
             <div class="product-image">
-                <img src="img-prod/<?= htmlspecialchars($produit['image_url']) ?>" alt="<?= htmlspecialchars($produit['nom']) ?>">
+                <img src="photo.php?id=<?= (int) $produit['id'] ?>" alt="<?= htmlspecialchars($produit['nom']) ?>">
             </div>
             
             <div class="product-details">
@@ -247,6 +247,7 @@ if(!$produit) {
                         <span class="cat-badge"><?= htmlspecialchars($produit['categorie_nom']) ?></span>
                     <?php endif; ?>
                     <h1><?= htmlspecialchars($produit['nom']) ?></h1>
+                    <p>Vendeur : <?= app_escape($produit['vendeur_nom'] ?? 'Non renseigné') ?></p>
                     <p><?= nl2br(htmlspecialchars($produit['description'])) ?></p>
                 </div>
 
@@ -265,13 +266,15 @@ if(!$produit) {
                         </div>
                     </div>
 
-                    <?php if($produit['statut'] === 'en_cours' && isset($_SESSION['user_id'])): ?>
+                    <?php if($produit['statut'] === 'en_cours' && $user && (int) ($produit['vendeur_id'] ?? 0) !== (int) $user['id']): ?>
                         <form class="bid-form" id="bid-form">
                             <input type="hidden" id="produit_id" value="<?= $produit['id'] ?>">
-                            <input type="hidden" id="csrf-enchere" value="<?= htmlspecialchars($_SESSION['csrf_enchere'], ENT_QUOTES, 'UTF-8') ?>">
+                            <input type="hidden" id="csrf-enchere" value="<?= app_escape($csrf) ?>">
                             <input type="number" id="montant" aria-label="Montant de votre offre" placeholder="Votre offre..." min="0.01" step="0.01" required>
                             <button type="submit">Enchérir</button>
                         </form>
+                    <?php elseif($produit['statut'] !== 'terminee' && $user): ?>
+                        <p>Vous ne pouvez pas enchérir sur votre propre annonce.</p>
                     <?php elseif($produit['statut'] !== 'terminee'): ?>
                         <a href="login.php" class="warning">Connectez-vous pour participer aux enchères.</a>
                     <?php endif; ?>

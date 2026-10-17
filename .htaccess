@@ -1,0 +1,5 @@
+DirectoryIndex index.php
+Options -Indexes
+<FilesMatch "(?i)^(config(?:-demo|\.local)?\.php|creer-demo\.php|verifier-schema\.php|.*\.sql|\.env.*)$">
+    Require all denied
+</FilesMatch>

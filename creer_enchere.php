@@ -1,11 +1,8 @@
 <?php
-require_once 'config.php';
+require_once __DIR__ . '/bootstrap.php';
 
-// Sécurité : Si l'utilisateur n'est pas connecté, on le jette
-if(!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
+$user = app_require_user(false);
+$csrf = app_csrf_token();
 
 // Récupération des catégories pour le menu déroulant
  $categories = $pdo->query("SELECT * FROM categories")->fetchAll();
@@ -70,19 +67,21 @@ if(!isset($_SESSION['user_id'])) {
 
     <div class="main-content">
         <div class="form-container">
+            <p style="margin-bottom:18px"><a href="mes_annonces.php">Mes annonces</a></p>
             <h1><i class='bx bx-add-to-queue'></i> Créer une nouvelle enchère</h1>
             
-            <div id="form-message" class="msg"></div>
+            <div id="form-message" class="msg" role="status" aria-live="polite"></div>
 
             <form action="traitement_creation.php" method="POST" enctype="multipart/form-data" id="create-form">
+                <input type="hidden" name="csrf_token" value="<?= app_escape($csrf) ?>">
                 <div class="form-group">
-                    <label>Nom du produit</label>
-                    <input type="text" name="nom" required>
+                    <label for="nom">Nom du produit</label>
+                    <input type="text" name="nom" id="nom" maxlength="180" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Catégorie</label>
-                    <select name="categorie_id" required>
+                    <label for="categorie_id">Catégorie</label>
+                    <select name="categorie_id" id="categorie_id" required>
                         <option value="">-- Choisir --</option>
                         <?php foreach($categories as $cat): ?>
                             <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nom']) ?></option>
@@ -91,23 +90,23 @@ if(!isset($_SESSION['user_id'])) {
                 </div>
 
                 <div class="form-group">
-                    <label>Description</label>
-                    <textarea name="description" required></textarea>
+                    <label for="description">Description</label>
+                    <textarea name="description" id="description" maxlength="5000" required></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label>Prix de départ (€)</label>
-                    <input type="number" name="prix_depart" step="0.01" min="1" required>
+                    <label for="prix_depart">Prix de départ (€)</label>
+                    <input type="number" name="prix_depart" id="prix_depart" step="0.01" min="0.01" max="9999999999999.99" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Date et heure de fin</label>
-                    <input type="datetime-local" name="date_fin" required>
+                    <label for="date_fin">Date et heure de fin</label>
+                    <input type="datetime-local" name="date_fin" id="date_fin" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Photo du produit</label>
-                    <input type="file" name="image" accept="image/jpeg, image/png, image/webp" required>
+                    <label for="image">Photo du produit (JPEG, PNG ou WebP, 5 Mo maximum)</label>
+                    <input type="file" name="image" id="image" accept="image/jpeg, image/png, image/webp" required>
                 </div>
 
                 <button type="submit" class="btn-submit">Mettre en ligne</button>
@@ -116,34 +115,29 @@ if(!isset($_SESSION['user_id'])) {
     </div>
 
     <script>
-        const sidebar = document.querySelector('#sidebar');
-        const btn = document.querySelector('#btn');
-        btn.onclick = (e) => { e.preventDefault(); sidebar.classList.toggle('open'); };
-
-        // Soumission en AJAX pour ne pas recharger la page si erreur
-        document.getElementById('create-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const msgDiv = document.getElementById('form-message');
-            const formData = new FormData(this); // Gère automatiquement l'upload de fichier
-
-            fetch('traitement_creation.php', {
-                method: 'POST',
-                body: formData 
-            })
-            .then(response => response.json())
-            .then(data => {
-                msgDiv.className = 'msg ' + (data.success ? 'success' : 'error');
-                msgDiv.innerText = data.message;
-                
-                if(data.success) {
-                    // Redirige vers l'accueil après 2 secondes si succès
-                    setTimeout(() => window.location.href = 'index.php', 2000);
-                }
-            })
-            .catch(() => {
-                msgDiv.className = 'msg error';
-                msgDiv.innerText = "Erreur lors de l'envoi.";
-            });
+        const form = document.getElementById('create-form');
+        const button = form.querySelector('button[type="submit"]');
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            if (button.disabled) return;
+            const message = document.getElementById('form-message');
+            button.disabled = true;
+            let navigating = false;
+            try {
+                const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+                const data = await response.json();
+                if (!response.ok || data.success !== true) throw new Error(data.message || 'Publication impossible.');
+                if (!Number.isSafeInteger(data.id) || data.id < 1) throw new Error('Vérifiez la publication dans « Mes annonces ».');
+                message.className = 'msg success';
+                message.textContent = data.message;
+                navigating = true;
+                window.location.assign('detprod.php?id=' + data.id);
+            } catch (error) {
+                message.className = 'msg error';
+                message.textContent = error instanceof TypeError ? 'Connexion interrompue. Vérifiez « Mes annonces » avant de réessayer.' : error.message;
+            } finally {
+                if (!navigating) button.disabled = false;
+            }
         });
     </script>
 </body>

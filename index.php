@@ -1,33 +1,32 @@
 <?php
-require_once 'config.php';
-require_once 'cron_terminer_encheres.php';
-
-// 1. Récupération de TOUTES les catégories pour le menu
- $categories = $pdo->query("SELECT * FROM categories")->fetchAll();
-
-// Récupération des favoris de l'utilisateur (si connecté)
- $_SESSION['user_fav_ids'] = [];
-if(isset($_SESSION['user_id'])) {
-    $fav_req = $pdo->prepare("SELECT produit_id FROM favoris WHERE utilisateur_id = ?");
-    $fav_req->execute([$_SESSION['user_id']]);
-    foreach($fav_req->fetchAll() as $f) {
-        $_SESSION['user_fav_ids'][] = $f['produit_id'];
+require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/cron_terminer_encheres.php';
+$user = app_current_user();
+$csrf = app_csrf_token();
+$categories = $pdo->query('SELECT id, nom FROM categories ORDER BY nom')->fetchAll();
+$category = isset($_GET['categorie']) ? filter_var($_GET['categorie'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) : null;
+if ($category === false) { http_response_code(400); exit('Catégorie invalide.'); }
+$favoriteIds = [];
+if ($user) {
+    $query = $pdo->prepare('SELECT produit_id FROM favoris WHERE utilisateur_id = ?');
+    $query->execute([$user['id']]);
+    $favoriteIds = array_map('intval', $query->fetchAll(PDO::FETCH_COLUMN));
+}
+$slides = $pdo->query("SELECT id, nom, prix_actuel FROM produits WHERE statut = 'en_cours' AND date_fin > NOW() AND archive_le IS NULL ORDER BY date_fin DESC, id DESC LIMIT 3")->fetchAll();
+$statement = "SELECT p.*, c.nom AS categorie_nom FROM produits p LEFT JOIN categories c ON p.categorie_id = c.id WHERE p.statut = 'en_cours' AND p.date_fin > NOW() AND p.archive_le IS NULL";
+$params = [];
+$title = 'Toutes les enchères';
+if ($category !== null) {
+    $statement .= ' AND p.categorie_id = ?';
+    $params[] = $category;
+    $title = 'Catégorie introuvable';
+    foreach ($categories as $cat) {
+        if ((int) $cat['id'] === $category) { $title = 'Catégorie : ' . $cat['nom']; break; }
     }
 }
-
-// --- NOUVEAU : Récupération des 3 derniers produits pour le Slider ---
- $req_slider = $pdo->query("SELECT id, nom, image_url, prix_actuel FROM produits WHERE statut = 'en_cours' ORDER BY date_fin DESC LIMIT 3");
- $slides = $req_slider->fetchAll();
-// ----------------------------------------------------------------
-
-// 2. Récupération des produits (Filtrage dynamique)
-if(isset($_GET['categorie']) && is_numeric($_GET['categorie'])) {
-    $req = $pdo->prepare("SELECT p.*, c.nom as categorie_nom FROM produits p LEFT JOIN categories c ON p.categorie_id = c.id WHERE p.categorie_id = ? AND p.statut = 'en_cours' ORDER BY p.date_fin DESC");
-    $req->execute([$_GET['categorie']]);
-} else {
-    $req = $pdo->query("SELECT p.*, c.nom as categorie_nom FROM produits p LEFT JOIN categories c ON p.categorie_id = c.id WHERE p.statut = 'en_cours' ORDER BY p.date_fin DESC");
-}
- $produits = $req->fetchAll();
+$query = $pdo->prepare($statement . ' ORDER BY p.date_fin DESC, p.id DESC LIMIT 50');
+$query->execute($params);
+$produits = $query->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -212,7 +211,7 @@ if(isset($_GET['categorie']) && is_numeric($_GET['categorie'])) {
         </div>
         <ul class="nav-list">
             
-            <?php if(isset($_SESSION['user_id'])): ?>
+            <?php if($user): ?>
                 <li>
                     <a href="creer_enchere.php">
                         <i class='bx bx-plus-circle'></i>
@@ -221,6 +220,10 @@ if(isset($_GET['categorie']) && is_numeric($_GET['categorie'])) {
                 </li>
             <?php endif; ?>
 
+            <?php if ($user): ?>
+            <li><a href="mes_annonces.php"><i class="bx bx-list-ul"></i><span class="links_name">Mes annonces</span></a></li>
+            <?php if ((int) $user['is_admin'] === 1): ?><li><a href="admin.php"><i class="bx bx-shield"></i><span class="links_name">Administration</span></a></li><?php endif; ?>
+            <?php endif; ?>
             <!-- Lien Tous les produits -->
             <li>
                 <a href="index.php" class="<?= !isset($_GET['categorie']) ? 'active' : '' ?>">
@@ -233,7 +236,7 @@ if(isset($_GET['categorie']) && is_numeric($_GET['categorie'])) {
                 <li>
                     <a href="index.php?categorie=<?= $cat['id'] ?>" class="<?= (isset($_GET['categorie']) && $_GET['categorie'] == $cat['id']) ? 'active' : '' ?>">
                         <i class='bx bx-folder'></i>
-                        <span class="links_name"><?= htmlspecialchars($cat['nom']) ?></span>
+                        <span class="links_name"><?= app_escape($cat['nom']) ?></span>
                     </a>
                 </li>
             <?php endforeach; ?>
@@ -246,12 +249,12 @@ if(isset($_GET['categorie']) && is_numeric($_GET['categorie'])) {
             <i class='bx bx-menu' id="mobile-btn"></i>
             <div class="search-box">
                 <i class='bx bx-search'></i>
-                <input type="text" placeholder="Rechercher un produit...">
+                <input type="search" aria-label="Rechercher un produit" maxlength="100" placeholder="Rechercher un produit...">
             </div>
             <div class="user-area">
-                <?php if(isset($_SESSION['user_nom'])): ?>
-                    <span>Bonjour, <strong><?= htmlspecialchars($_SESSION['user_nom']) ?></strong></span>
-                    <a href="auth.php?action=logout" class="logout"><i class='bx bx-log-out'></i> Déconnexion</a>
+                <?php if($user): ?>
+                    <span>Bonjour, <strong><?= app_escape($user['nom']) ?></strong></span>
+                    <?php app_logout_form(); ?>
                 <?php else: ?>
                     <a href="login.php"><i class='bx bx-log-in'></i> Connexion</a>
                 <?php endif; ?>
@@ -263,9 +266,9 @@ if(isset($_GET['categorie']) && is_numeric($_GET['categorie'])) {
             <?php if(count($slides) > 0): ?>
                 <?php foreach($slides as $index => $slide): ?>
                     <div class="slide <?= $index === 0 ? 'active' : '' ?>">
-                        <img src="img-prod/<?= htmlspecialchars($slide['image_url']) ?>" alt="">
+                        <img src="photo.php?id=<?= (int) $slide['id'] ?>" alt="">
                         <div class="slide-content">
-                            <h2><?= htmlspecialchars($slide['nom']) ?></h2>
+                            <h2><?= app_escape($slide['nom']) ?></h2>
                             <div class="slide-price"><?= number_format($slide['prix_actuel'], 2, ',', ' ') ?> €</div>
                             <a href="detprod.php?id=<?= $slide['id'] ?>" class="btn-slider">Enchérir</a>
                         </div>
@@ -281,41 +284,27 @@ if(isset($_GET['categorie']) && is_numeric($_GET['categorie'])) {
             <?php endif; ?>
         </div>
 
-        <!-- Titre dynamique selon la catégorie -->
-        <div class="page-title">
-
-        <!-- Titre dynamique selon la catégorie -->
-        <div class="page-title">
-            <?php 
-                if(isset($_GET['categorie'])) {
-                    $cat_req = $pdo->prepare("SELECT nom FROM categories WHERE id = ?");
-                    $cat_req->execute([$_GET['categorie']]);
-                    $cat_name = $cat_req->fetch();
-                    echo "Catégorie : " . htmlspecialchars($cat_name['nom']);
-                } else {
-                    echo "Toutes les enchères";
-                }
-            ?>
-        </div>
+        <h1 class="page-title"><?= app_escape($title) ?></h1>
+        <p id="catalog-message" role="status" aria-live="polite" style="padding:12px 30px 0"></p>
 
         <div class="product-grid">
             <?php if(count($produits) > 0): ?>
                 <?php foreach($produits as $prod): ?>
                     <div class="card">
-                        <img src="img-prod/<?= htmlspecialchars($prod['image_url']) ?>" alt="">
+                        <img src="photo.php?id=<?= (int) $prod['id'] ?>" alt="">
                         <div class="card-content">
                             <!-- NOUVEAU : Bouton Favori -->
-                            <?php if(isset($_SESSION['user_id'])): ?>
-                                <button class="fav-btn" data-id="<?= $prod['id'] ?>" onclick="toggleFavori(<?= $prod['id'] ?>, this)">
-                                    <i class='bx <?= isset($_SESSION['user_fav_ids']) && in_array($prod['id'], $_SESSION['user_fav_ids']) ? 'bxs-heart' : 'bx-heart' ?>' style="font-size: 24px; color: <?= isset($_SESSION['user_fav_ids']) && in_array($prod['id'], $_SESSION['user_fav_ids']) ? 'red' : '#aaa' ?>;"></i>
+                            <?php if($user): ?>
+                                <button type="button" class="fav-btn" aria-label="Modifier les favoris" aria-pressed="<?= in_array((int) $prod['id'], $favoriteIds, true) ? 'true' : 'false' ?>" data-favori="<?= in_array((int) $prod['id'], $favoriteIds, true) ? '1' : '0' ?>" data-id="<?= (int) $prod['id'] ?>" onclick="toggleFavori(<?= (int) $prod['id'] ?>, this)">
+                                    <i class='bx <?= in_array((int) $prod['id'], $favoriteIds, true) ? 'bxs-heart' : 'bx-heart' ?>' style="font-size: 24px; color: <?= in_array((int) $prod['id'], $favoriteIds, true) ? 'red' : '#aaa' ?>;"></i>
                                 </button>
                             <?php endif; ?>
 
                             <?php if($prod['categorie_nom']): ?>
-                                <span class="cat-badge"><?= htmlspecialchars($prod['categorie_nom']) ?></span>
+                                <span class="cat-badge"><?= app_escape($prod['categorie_nom']) ?></span>
                             <?php endif; ?>
 
-                            <h3><?= htmlspecialchars($prod['nom']) ?></h3>
+                            <h3><?= app_escape($prod['nom']) ?></h3>
                             <div class="meta">
                                 <span class="price"><?= number_format($prod['prix_actuel'], 2, ',', ' ') ?> €</span>
                                 <span class="end-date">Fin le <?= date('d/m', strtotime($prod['date_fin'])) ?></span>
@@ -331,132 +320,140 @@ if(isset($_GET['categorie']) && is_numeric($_GET['categorie'])) {
     </div>
 
     <script>
-        // 1. LOGIQUE SIDEBAR
-        const sidebar = document.querySelector('#sidebar');
-        const btnDesktop = document.querySelector('.sidebar #btn');
-        const btnMobile = document.querySelector('#mobile-btn');
+        const config = <?= json_encode(['csrf' => $csrf, 'authenticated' => (bool) $user, 'category' => $category, 'favorites' => $favoriteIds], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+        const sidebar = document.getElementById('sidebar');
+        document.querySelector('.sidebar #btn')?.addEventListener('click', () => sidebar.classList.toggle('open'));
+        document.getElementById('mobile-btn')?.addEventListener('click', () => sidebar.classList.toggle('open'));
         const mainContent = document.querySelector('.main-content');
-
-        // Clic Desktop
-        if(btnDesktop) {
-            btnDesktop.onclick = () => sidebar.classList.toggle('open');
-        }
-
-        // Clic Mobile
-        if(btnMobile) {
-            btnMobile.onclick = () => sidebar.classList.toggle('open');
-        }
-
-        // Fermer le menu si on clique sur le fond sombre (sur mobile)
-        mainContent.onclick = function(e) {
-            // On vérifie qu'on a bien cliqué sur le fond et pas sur un élément cliquable
-            if(e.target === mainContent && window.innerWidth <= 768 && sidebar.classList.contains('open')) {
-                sidebar.classList.remove('open');
-            }
-        };
-
-        // 2. LOGIQUE DE RECHERCHE EN TEMPS RÉEL
-        const searchInput = document.querySelector('.search-box input');
-        const productGrid = document.querySelector('.product-grid');
-        const pageTitle = document.querySelector('.page-title');
-
-        let typingTimer;
-
-        searchInput.addEventListener('input', function() {
-            clearTimeout(typingTimer);
-            const query = this.value.trim();
-
-            // Si on efface tout, on remet le titre par défaut et on recharge proprement
-            if(query.length < 2) {
-                pageTitle.innerText = "Toutes les enchères";
-                // Au lieu de recharger la page, on relance la requête initiale vide
-                fetch('recherche.php?q=')
-                    .then(res => res.json())
-                    .then(data => afficherResultats(data, ''));
-                return;
-            }
-
-            typingTimer = setTimeout(() => {
-                fetch('recherche.php?q=' + encodeURIComponent(query))
-                    .then(response => response.json())
-                    .then(data => {
-                        afficherResultats(data, query);
-                    })
-                    .catch(error => {
-                        console.error("Erreur fetch:", error);
-                        productGrid.innerHTML = '<h2 style="grid-column: 1/-1; text-align:center; color:red; margin-top:50px;">Erreur de connexion au serveur.</h2>';
-                    });
-            }, 300);
+        mainContent.addEventListener('click', event => {
+            if (event.target === mainContent && window.innerWidth <= 768) sidebar.classList.remove('open');
         });
-
-                // Fonction séparée pour générer le HTML (plus propre)
-                function afficherResultats(data, query) {
-                    productGrid.innerHTML = ''; // On vide la grille
-
-                    if(data.length === 0 && query.length >= 2) {
-                        pageTitle.innerText = "Résultats de recherche";
-                        productGrid.innerHTML = '<h2 style="grid-column: 1/-1; text-align:center; color:#666; margin-top:50px;">Aucun résultat pour "' + query + '"</h2>';
-                        return;
-                    }
-
-                    if(query.length >= 2) {
-                        pageTitle.innerText = 'Résultats pour "' + query + '"';
-                    }
-
-                    data.forEach(prod => {
-                        const dateFin = new Date(prod.date_fin).getTime();
-                        const maintenant = new Date().getTime();
-                        const difference = dateFin - maintenant;
-                        const dateTexte = difference > 0 ? 'Fin le ' + new Date(prod.date_fin).toLocaleDateString('fr-FR') : '<span style="color:red;">Terminée</span>';
-
-                        const card = document.createElement('div');
-                        card.className = 'card';
-                        card.innerHTML = `
-                            <img src="img-prod/${prod.image_url}" alt="">
-                            <div class="card-content">
-                                <h3>${prod.nom}</h3>
-                                <div class="meta">
-                                    <span class="price">${parseFloat(prod.prix_actuel).toLocaleString('fr-FR', {minimumFractionDigits: 2})} €</span>
-                                    <span class="end-date">${dateTexte}</span>
-                                </div>
-                                <a href="detprod.php?id=${prod.id}" class="btn-view">Voir l'enchère</a>
-                            </div>
-                        `;
-                        productGrid.appendChild(card);
-                    });
-                }
-                        // 3. LOGIQUE SLIDER AUTOMATIQUE
-        const slides = document.querySelectorAll('.slide');
-        let currentSlide = 0;
-        setInterval(() => {
-            slides[currentSlide].classList.remove('active');
-            currentSlide = (currentSlide + 1) % slides.length;
-            slides[currentSlide].classList.add('active');
-        }, 5000);
-
-
-       
-        // 4. LOGIQUE FAVORIS
-        function toggleFavori(produitId, btn) {
-            fetch('traitement_favori.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'produit_id=' + produitId
-            })
-            .then(res => res.json())
-            .then(data => {
-                const icon = btn.querySelector('i');
-                if(data.success) {
-                    // Si ajouté aux favoris
-                    icon.className = 'bx bxs-heart';
-                    icon.style.color = 'red';
-                } else {
-                    // Si retiré
-                    icon.className = 'bx bx-heart';
-                    icon.style.color = '#aaa';
-                }
+        const grid = document.querySelector('.product-grid');
+        const title = document.querySelector('.page-title');
+        const message = document.getElementById('catalog-message');
+        const initialTitle = title.textContent;
+        const initialCards = [...grid.childNodes].map(node => node.cloneNode(true));
+        const favorites = new Map(config.favorites.map(id => [Number(id), true]));
+        const pendingFavorites = new Set();
+        function showFavorite(button, state) {
+            button.dataset.favori = state ? '1' : '0';
+            button.setAttribute('aria-pressed', String(state));
+            button.setAttribute('aria-label', state ? 'Retirer des favoris' : 'Ajouter aux favoris');
+            const icon = button.querySelector('i');
+            icon.className = state ? 'bx bxs-heart' : 'bx bx-heart';
+            icon.style.color = state ? 'red' : '#aaa';
+        }
+        function refreshFavorites() {
+            grid.querySelectorAll('.fav-btn').forEach(button => {
+                const id = Number(button.dataset.id);
+                showFavorite(button, favorites.has(id) ? favorites.get(id) : button.dataset.favori === '1');
+                button.disabled = pendingFavorites.has(id);
             });
         }
+        function element(tag, className, text) {
+            const node = document.createElement(tag);
+            if (className) node.className = className;
+            if (text !== undefined) node.textContent = text;
+            return node;
+        }
+        function displayResults(products, query) {
+            grid.replaceChildren();
+            title.textContent = 'Résultats pour « ' + query + ' »';
+            if (products.length === 0) {
+                grid.append(element('p', '', 'Aucun résultat pour « ' + query + ' ».'));
+                return;
+            }
+            for (const product of products) {
+                const id = Number(product.id);
+                if (!Number.isSafeInteger(id) || id < 1) continue;
+                const card = element('div', 'card');
+                const image = element('img');
+                image.src = 'photo.php?id=' + id;
+                image.alt = '';
+                const content = element('div', 'card-content');
+                if (config.authenticated) {
+                    const button = element('button', 'fav-btn');
+                    button.type = 'button';
+                    button.dataset.id = String(id);
+                    button.append(element('i', 'bx bx-heart'));
+                    const state = favorites.has(id) ? favorites.get(id) : Number(product.favori) === 1;
+                    showFavorite(button, state);
+                    button.disabled = pendingFavorites.has(id);
+                    button.addEventListener('click', () => toggleFavori(id, button));
+                    content.append(button);
+                }
+                if (product.categorie_nom) content.append(element('span', 'cat-badge', product.categorie_nom));
+                content.append(element('h3', '', product.nom));
+                const meta = element('div', 'meta');
+                meta.append(element('span', 'price', Number(product.prix_actuel).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'));
+                const date = String(product.date_fin).slice(0, 10).split('-').reverse().join('/');
+                meta.append(element('span', 'end-date', 'Fin le ' + date));
+                const link = element('a', 'btn-view', 'Voir l’enchère');
+                link.href = 'detprod.php?id=' + id;
+                content.append(meta, link);
+                card.append(image, content);
+                grid.append(card);
+            }
+        }
+        const input = document.querySelector('.search-box input');
+        let timer, controller, sequence = 0;
+        input.addEventListener('input', () => {
+            clearTimeout(timer);
+            controller?.abort();
+            const current = ++sequence;
+            const query = input.value.trim();
+            message.textContent = '';
+            if (query.length < 2) {
+                title.textContent = initialTitle;
+                grid.replaceChildren(...initialCards.map(node => node.cloneNode(true)));
+                refreshFavorites();
+                return;
+            }
+            timer = setTimeout(async () => {
+                controller = new AbortController();
+                const params = new URLSearchParams({ q: query });
+                if (config.category !== null) params.set('categorie', String(config.category));
+                try {
+                    const response = await fetch('recherche.php?' + params, { signal: controller.signal });
+                    const data = await response.json();
+                    if (!response.ok || !Array.isArray(data)) throw new Error(data.message || 'Recherche indisponible.');
+                    if (current === sequence) displayResults(data, query);
+                } catch (error) {
+                    if (error.name !== 'AbortError' && current === sequence) message.textContent = 'La recherche a échoué. Réessayez.';
+                }
+            }, 300);
+        });
+        const slides = document.querySelectorAll('.slide');
+        if (slides.length > 1) {
+            let currentSlide = 0;
+            setInterval(() => {
+                slides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide + 1) % slides.length;
+                slides[currentSlide].classList.add('active');
+            }, 5000);
+        }
+        async function toggleFavori(id, button) {
+            if (pendingFavorites.has(id)) return;
+            const desired = button.dataset.favori !== '1';
+            pendingFavorites.add(id);
+            refreshFavorites();
+            message.textContent = '';
+            try {
+                const response = await fetch('traitement_favori.php', {
+                    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ produit_id: id, favori: desired ? '1' : '0', csrf_token: config.csrf })
+                });
+                const data = await response.json();
+                if (!response.ok || data.success !== true || typeof data.favori !== 'boolean') throw new Error(data.message || 'Modification impossible.');
+                favorites.set(id, data.favori);
+            } catch (error) {
+                message.textContent = error instanceof TypeError ? 'Connexion interrompue. Actualisez la page pour vérifier vos favoris.' : error.message;
+            } finally {
+                pendingFavorites.delete(id);
+                refreshFavorites();
+            }
+        }
+        refreshFavorites();
     </script>
 </body>
 </html>

@@ -1,66 +1,79 @@
 <?php
-require_once 'config.php';
-header('Content-Type: application/json');
-
-// Sécurité
-if(!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'message' => 'Non autorisé']);
-    exit;
+require_once __DIR__ . '/bootstrap.php';
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    header('Allow: POST');
+    app_json(405, ['success' => false, 'message' => 'Méthode non autorisée.']);
 }
-
- $nom = trim($_POST['nom'] ?? '');
- $categorie_id = $_POST['categorie_id'] ?? '';
- $description = trim($_POST['description'] ?? '');
- $prix_depart = floatval($_POST['prix_depart'] ?? 0);
- $date_fin = $_POST['date_fin'] ?? '';
-
-// 1. Validations de base
-if(empty($nom) || empty($categorie_id) || empty($description) || $prix_depart <= 0 || empty($date_fin)) {
-    echo json_encode(['success' => false, 'message' => 'Tous les champs sont obligatoires.']);
-    exit;
+$user = app_require_user();
+if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 6 * 1024 * 1024) {
+    app_json(413, ['success' => false, 'message' => 'Le fichier doit faire au maximum 5 Mo.']);
 }
-
-// 2. Vérification de la date (doit être dans le futur)
-if(strtotime($date_fin) <= time()) {
-    echo json_encode(['success' => false, 'message' => 'La date de fin doit être dans le futur.']);
-    exit;
-}
-
-// 3. Gestion de l'upload de l'image
-if(!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
-    echo json_encode(['success' => false, 'message' => 'Erreur lors du téléchargement de l\'image.']);
-    exit;
-}
-
- $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-if(!in_array($_FILES['image']['type'], $allowedTypes)) {
-    echo json_encode(['success' => false, 'message' => 'Format d\'image invalide (JPG, PNG ou WEBP uniquement).']);
-    exit;
-}
-
-// Générer un nom de fichier unique pour éviter les écrasements (ex: 654987.jpg)
- $extension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
- $fileName = uniqid() . '.' . $extension;
- $uploadPath = 'img-prod/' . $fileName;
-
-if(!move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
-    echo json_encode(['success' => false, 'message' => 'Impossible de sauvegarder l\'image sur le serveur.']);
-    exit;
-}
-
-// 4. Insertion en base de données
+app_require_csrf();
+session_write_close();
+$path = null;
+$commitAttempted = false;
 try {
-    $insert = $pdo->prepare("INSERT INTO produits (nom, categorie_id, description, prix_depart, prix_actuel, date_fin, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    
-    if($insert->execute([$nom, $categorie_id, $description, $prix_depart, $prix_depart, $date_fin, $fileName])) {
-        echo json_encode(['success' => true, 'message' => 'Enchère créée avec succès ! Redirection...']);
-    } else {
-        // Si la BDD échoue, on supprime l'image uploadée pour ne pas polluer le serveur
-        unlink($uploadPath);
-        echo json_encode(['success' => false, 'message' => 'Erreur lors de l\'enregistrement en base de données.']);
+    $name = app_text($_POST['nom'] ?? null, 180, 'Nom');
+    $description = app_text($_POST['description'] ?? null, 5000, 'Description');
+    $amount = app_amount($_POST['prix_depart'] ?? null);
+    $category = filter_var($_POST['categorie_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    $query = $pdo->prepare('SELECT id FROM categories WHERE id = ?');
+    $query->execute([$category ?: 0]);
+    if (!$category || !$query->fetchColumn()) { throw new InvalidArgumentException('Choisissez une catégorie existante.'); }
+    $rawDate = $_POST['date_fin'] ?? null;
+    $date = is_string($rawDate) && preg_match('/\A[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}\z/', $rawDate)
+        ? DateTimeImmutable::createFromFormat('!Y-m-d\TH:i', $rawDate) : false;
+    $dateErrors = DateTimeImmutable::getLastErrors();
+    if (!$date || ($dateErrors !== false && ($dateErrors['warning_count'] || $dateErrors['error_count'])) || $date->format('Y-m-d\TH:i') !== $rawDate) {
+        throw new InvalidArgumentException('Indiquez une date et une heure de fin valides.');
     }
-} catch(Exception $e) {
-    unlink($uploadPath);
-    echo json_encode(['success' => false, 'message' => 'Erreur serveur.']);
+    $end = $date->format('Y-m-d H:i:s');
+    $query = $pdo->prepare('SELECT ? > NOW()');
+    $query->execute([$end]);
+    if (!(int) $query->fetchColumn()) { throw new InvalidArgumentException('La date de fin doit être dans le futur.'); }
+    $upload = $_FILES['image'] ?? null;
+    if (!is_array($upload) || !isset($upload['error']) || !is_int($upload['error'])) {
+        throw new InvalidArgumentException('Ajoutez une photo au format JPEG, PNG ou WebP.');
+    }
+    if (in_array($upload['error'], [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
+        app_json(413, ['success' => false, 'message' => 'Le fichier doit faire au maximum 5 Mo.']);
+    }
+    if ($upload['error'] !== UPLOAD_ERR_OK || !is_string($upload['tmp_name'] ?? null) || !is_uploaded_file($upload['tmp_name'])) {
+        throw new InvalidArgumentException('Le transfert de la photo a échoué.');
+    }
+    $size = filesize($upload['tmp_name']);
+    if (!$size || $size > 5 * 1024 * 1024) {
+        app_json(413, ['success' => false, 'message' => 'Le fichier doit faire entre 1 octet et 5 Mo.']);
+    }
+    $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($upload['tmp_name']);
+    $dimensions = @getimagesize($upload['tmp_name']);
+    if (!isset($allowed[$mime]) || !$dimensions || ($dimensions['mime'] ?? '') !== $mime) {
+        app_json(415, ['success' => false, 'message' => 'La photo doit être un véritable fichier JPEG, PNG ou WebP.']);
+    }
+    if ($dimensions[0] < 1 || $dimensions[1] < 1 || $dimensions[0] > 8192 || $dimensions[1] > 8192 || $dimensions[0] * $dimensions[1] > 20000000) {
+        throw new InvalidArgumentException('La photo est trop grande : 8192 pixels par côté et 20 millions de pixels au maximum.');
+    }
+    // Ni le nom, ni l'extension, ni le type déclaré par le navigateur ne sont utilisés.
+    $filename = 'lot_' . bin2hex(random_bytes(16)) . '.' . $allowed[$mime];
+    $path = app_upload_dir() . DIRECTORY_SEPARATOR . $filename;
+    if (!move_uploaded_file($upload['tmp_name'], $path)) { throw new RuntimeException('Stockage de la photo impossible.'); }
+    @chmod($path, 0640);
+    $pdo->beginTransaction();
+    $query = $pdo->prepare("INSERT INTO produits(nom, categorie_id, description, prix_depart, prix_actuel, date_fin, image_url, statut, vendeur_id)
+        SELECT ?, ?, ?, ?, ?, ?, ?, 'en_cours', ? FROM DUAL WHERE ? > NOW()");
+    $query->execute([$name, $category, $description, $amount, $amount, $end, $filename, $user['id'], $end]);
+    if ($query->rowCount() !== 1) { throw new InvalidArgumentException('La date de fin doit être dans le futur.'); }
+    $id = (int) $pdo->lastInsertId();
+    $commitAttempted = true;
+    $pdo->commit();
+    app_json(201, ['success' => true, 'message' => 'Votre annonce est publiée.', 'id' => $id, 'url' => 'detprod.php?id=' . $id]);
+} catch (Throwable $error) {
+    try { if ($pdo->inTransaction()) { $pdo->rollBack(); } }
+    catch (Throwable $rollbackError) { error_log('Annulation de publication impossible : ' . $rollbackError->getMessage()); }
+    // Un accusé de réception du COMMIT perdu ne justifie pas d'effacer la photo d'un lot éventuellement enregistré.
+    if ($path !== null && !$commitAttempted && is_file($path)) { @unlink($path); }
+    if ($error instanceof InvalidArgumentException) { app_json(422, ['success' => false, 'message' => $error->getMessage()]); }
+    error_log('Publication impossible : ' . $error->getMessage());
+    app_json(500, ['success' => false, 'message' => 'Impossible de confirmer la publication. Vérifiez « Mes annonces » avant de réessayer.']);
 }
-?>

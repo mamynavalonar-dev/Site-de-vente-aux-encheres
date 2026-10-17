@@ -1,0 +1,15 @@
+/.env
+/.env.*
+!/.env.example
+/config.local.php
+/storage/
+/vendor/
+/node_modules/
+*.log
+/AGORASTORE-ET-RECONSTITUTION.md
+/LISEZ-MOI.md
+/VERIFICATIONS.json
+/config-demo.php
+/creer-demo.php
+/schema-reconstitue.sql
+/verifier-schema.php
